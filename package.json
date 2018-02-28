@@ -3,7 +3,7 @@
   "bin": {
     "quicklock": "index.js"
   },
-  "version": "0.0.102",
+  "version": "0.0.103",
   "description": "Quick locks for scripts",
   "main": "index.js",
   "scripts": {
