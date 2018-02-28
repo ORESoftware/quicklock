@@ -2,7 +2,7 @@
 
 ## QuickLock
 
-# npm install -g quicklock
+# <i>install</i>: npm install -g quicklock
 
 ### Usage
 
@@ -11,15 +11,16 @@
 
 quicklock $$
 
-tsc --watch
+# your critical code goes below the above statement
+tsc --watch   # this can be whatever you want
 
 ```
 
 
 what the above does is ensure that this script only runs once. If you try to run 
-the same script again from the same working directory, you will get a lock file error.
+the same script again from the same working directory, you will get a lock related error.
 
-You pass the pid of the shell process to quicklock, so that it releases the lock
+You pass the pid ($$) of the shell process to quicklock, so that it releases the lock
 when the shell process dies.
 
 
@@ -28,7 +29,7 @@ when the shell process dies.
 ```bash
 #!/usr/bin/env bash
 
-quicklock $$ lockname
+quicklock $$ "<lockname>"  # lockname is some string of your own choosing
 
 tsc --watch
 
