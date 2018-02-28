@@ -2,7 +2,7 @@
 
 set -e;
 
-quicklock -m $(pwd) --pid $$;
+quicklock $$;
 
 
 node test/server.js

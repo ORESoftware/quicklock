@@ -4,18 +4,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var path = require("path");
 var cp = require("child_process");
-var grandParentPid = parseInt(process.argv[process.argv.length - 1]);
-var magicStrings = [process.argv.indexOf('-m'), process.argv.indexOf('--mutex')].map(function (v) { return Math.max(v, 0); });
-var magicIndex = magicStrings.reduce(function (a, b) {
-    if (a && b)
-        throw new Error('--mutex and -m are clashing at the command line.');
-    if (!(a || b))
-        throw new Error('neither --mutex nor -m were passed at the command line.');
-    return a || b;
-});
-var mutexKey = process.argv[magicIndex + 1];
+var grandParentPid = parseInt(process.argv[2] || "0");
+if (!grandParentPid) {
+    throw new Error('quicklock: no pid passed at command line.');
+}
+console.log('quicklock: parent pid:', grandParentPid);
+var mutexKey = process.argv[3];
 if (!mutexKey) {
-    throw new Error('Missing argument after --mutex flag.');
+    console.error('quicklock warning: using pwd as default value for mutex key.');
+    mutexKey = process.cwd();
 }
 var home = process.env.HOME;
 var quicklockHome = path.resolve(home + '/.quicklock');

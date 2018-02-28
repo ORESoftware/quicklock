@@ -11,6 +11,8 @@ if (!grandParentPid) {
   throw new Error('quicklock: no pid passed at command line.')
 }
 
+console.log('quicklock: parent pid:', grandParentPid);
+
 // const magicStrings = [process.argv.indexOf('-m'), process.argv.indexOf('--mutex')].map(v => Math.max(v, 0));
 //
 // const magicIndex = magicStrings.reduce(function (a, b) {
