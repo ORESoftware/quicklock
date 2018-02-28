@@ -1,0 +1,33 @@
+{
+  "name": "quicklock",
+  "bin": {
+    "quicklock": "index.js"
+  },
+  "version": "0.0.101",
+  "description": "Quick locks for scripts",
+  "main": "index.js",
+  "scripts": {
+    "test": "suman test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ORESoftware/quicklock.git"
+  },
+  "keywords": [
+    "lock",
+    "fs",
+    "filesystem",
+    "lock",
+    "mutex"
+  ],
+  "author": "Olegzandr VD",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ORESoftware/quicklock/issues"
+  },
+  "homepage": "https://github.com/ORESoftware/quicklock#readme",
+  "devDependencies": {
+    "@types/core-js": "^0.9.46",
+    "@types/node": "^9.4.6"
+  }
+}
