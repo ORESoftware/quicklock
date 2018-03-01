@@ -2,7 +2,7 @@
 
 ## QuickLock
 
-# <i>install</i>: npm install -g quicklock
+# <i>install</i>: $ npm install -g quicklock
 
 ### Usage
 
@@ -15,7 +15,6 @@ quicklock $$
 tsc --watch   # this can be whatever you want
 
 ```
-
 
 what the above does is ensure that this script only runs once. If you try to run 
 the same script again from the same working directory, you will get a lock related error.

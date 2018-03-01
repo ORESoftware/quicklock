@@ -1,0 +1,7 @@
+
+
+https://github.com/nodejs/help/issues/1132
+
+https://stackoverflow.com/questions/1058047/wait-for-any-process-to-finish/39231660#39231660
+
+https://github.com/izabera/pm-tools

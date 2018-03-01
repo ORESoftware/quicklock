@@ -26,7 +26,7 @@ k.once('exit', function () {
     }
 });
 var cmd = isDarwin ?
-    "lsof -p " + grandParentPid + " +r 1 &>/dev/null" :
+    __dirname + "/kq " + grandParentPid :
     "tail --pid=" + grandParentPid + " -f /dev/null";
 k.stderr.pipe(process.stderr);
 k.stdin.write(cmd);

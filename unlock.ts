@@ -18,20 +18,6 @@ process.once('exit', function () {
   fs.unlinkSync(filePath);
 });
 
-// setInterval(function () {
-//   try {
-//     cp.execSync(`ps -p ${grandParentPid}`)
-//   }
-//   catch (err) {
-//     try {
-//       fs.unlinkSync(filePath);
-//     }
-//     finally {
-//       process.exit(0);
-//     }
-//   }
-// }, 500);
-
 const k = cp.spawn(`bash`);
 
 k.stderr.setEncoding('utf8');
@@ -48,7 +34,8 @@ k.once('exit', function () {
 // tail --pid=11666  # tail --pid=11666 -f /dev/null
 
 const cmd = isDarwin ?
-  `lsof -p ${grandParentPid} +r 1 &>/dev/null` :
+  // `lsof -p ${grandParentPid} +r 1 &>/dev/null` :
+  `${__dirname}/kq ${grandParentPid}` :
   `tail --pid=${grandParentPid} -f /dev/null`;
 
 k.stderr.pipe(process.stderr);
