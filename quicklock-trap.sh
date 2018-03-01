@@ -11,21 +11,17 @@ function qltrap {
 }
 
 function qlstart {
-#  set -e;
-  name="${1:-$(pwd)}"
+  set -e;
+  name="${1:-$PWD}"
   mkdir -p "$HOME/.quicklock/locks"
   fle=$(echo "${name}" | tr "/" _)
-  qln="$HOME/${fle}.lock"
+  qln="$HOME/.quicklock/locks/${fle}.lock"
   mkdir  "${qln}" || { echo "quicklock could not acquire lock."; exit 1; }
   export quicklock_name="${qln}";
   trap onqltrap EXIT;
+  echo "quicklock acquired lock: ${qln}"
 }
 
-echo "sourced";
 
-#function qlstartold {
-#   mkdir -p "$HOME/.quicklock/fifo"
-#   rm "$HOME/.quicklock/fifo/$$.fifo"
-#   mkfifo "$HOME/.quicklock/fifo/$$.fifo"
-#}
+
 

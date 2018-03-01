@@ -5,6 +5,6 @@
 
 source /Users/alexamil/WebstormProjects/oresoftware/quicklock/quicklock-trap.sh
 
-qlstart
+qlstart "$PWD"
 
 tsc -w
