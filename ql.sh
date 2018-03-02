@@ -37,7 +37,7 @@ function on_ql_conditional_exit {
 
 function ql_ls {
    local home="$HOME/.quicklock/locks"
-   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}/$home$i${ql_no_color}"; done;
+   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
 }
 
 function ql_find {
