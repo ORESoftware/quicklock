@@ -20,11 +20,13 @@ or
 ```bash
 #!/usr/bin/env bash
 
-# acquire lock, will exit with 1, if lock cannot be acquired the first time
+# acquire lock. will exit with exit code 1, if lock cannot be acquired the first time
 # first and only argument is an optional lockname, if no argument passed, $PWD will be used
+
 ql_acquire_lock "$PWD"  
 
-# your critical code goes below the above statement
+# your critical code goes here
+
 foobarbaz --watch   # this can be whatever you want
 
 # when the script/process exits, lock will automatically be released
@@ -38,10 +40,16 @@ foobarbaz --watch   # this can be whatever you want
 
 ql_acquire_lock "$PWD" 
 
-# your critical code goes below the above statement
+# your critical code goes here
+
 echo "foo bar bar"
 
+# we can release the lock here if we want and continue with more commands 
+
 ql_release_lock true  # true is optional argument, if true is passed, will exit on failure to release lock
+
+# we released the lock already, because we are done with the critical section
+# now we can run whatever
 
 dosomethingelse here
 
