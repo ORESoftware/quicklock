@@ -7,6 +7,8 @@ ql_orange='\033[1;33m'
 ql_green='\033[1;32m'
 ql_no_color='\033[0m'
 
+# zoooom
+
 function on_ql_trap {
    echo "quicklock: process with pid $$ was trapped.";
    ql_release_lock
