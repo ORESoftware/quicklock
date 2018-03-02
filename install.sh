@@ -17,8 +17,6 @@ mkdir -p "$HOME/.quicklock/locks"
 curl https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh --output "$HOME/.quicklock/ql.sh"
 
 echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
-echo "";
-echo -e "${ql_cyan}To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";
-echo "";
-echo ". \"$HOME/.quicklock/ql.sh\"";
+echo -e "${ql_cyan} => To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";
+echo ". \"\$HOME/.quicklock/ql.sh\"";
 

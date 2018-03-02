@@ -4,7 +4,8 @@
 
 ### To use the simple bash version:
 
-##### <i>install</i>: `$ curl -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
+##### <i>install</i>: `$ curl -H 'Cache-Control: no-cache' -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh?$(date +%s) | bash`
+
 
 or
 
