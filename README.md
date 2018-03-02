@@ -2,12 +2,47 @@
 
 ## QuickLock
 
+To use the simple bash version:
+# <i>install</i>: curl -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash
+
+To use the complex node.js version:
 # <i>install</i>: $ npm install -g quicklock
-# <i>install</i>: curl -o- -f https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash
 
 
+### Simple usage
 
-### Usage
+```bash
+#!/usr/bin/env bash
+
+# acquire lock, will exit with 1, if lock cannot be acquired the first time
+# first and only argument is an optional lockname, if no argument passed, $PWD will be used
+ql_acquire_lock "$PWD"  
+
+# your critical code goes below the above statement
+foobarbaz --watch   # this can be whatever you want
+
+# when the script/process exits, lock will automatically be released
+
+```
+
+### Advanced usage
+
+```bash
+#!/usr/bin/env bash
+
+ql_acquire_lock "$PWD" 
+
+# your critical code goes below the above statement
+echo "foo bar bar"
+
+ql_release_lock true  # true is optional argument, if true is passed, will exit on failure to release lock
+
+dosomethingelse here
+
+
+```
+
+### Complicated Usage With Node.js
 
 ```bash
 #!/usr/bin/env bash
