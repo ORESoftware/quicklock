@@ -28,7 +28,8 @@ function on_ql_conditional_exit {
 
 
 function ql_ls {
-   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$HOME/.quicklock/locks/$i${ql_no_color}"; done;
+   local home="$HOME/.quicklock/locks"
+   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}/$home$i${ql_no_color}"; done;
 }
 
 function ql_find {
@@ -39,7 +40,7 @@ function ql_acquire_lock {
   ##### //////////////////////////////////////////////////////////////////////////////////////////
 #  set -e;
 
-  name="${1:-$PWD}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
+  local name="${1:-$PWD}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
   mkdir -p "$HOME/.quicklock/locks"
   fle=$(echo "${name}" | tr "/" _)
 
@@ -50,10 +51,11 @@ function ql_acquire_lock {
     return 1;
   fi
 
-  qln="$HOME/.quicklock/locks/${fle}.lock"
+  local qln="$HOME/.quicklock/locks/${fle}.lock"
 
   mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}.";
+    echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
     on_ql_conditional_exit;
     return 1;
   }
