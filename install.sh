@@ -2,13 +2,23 @@
 
 set -e;
 
+ql_gray='\033[1;30m'
+ql_magenta='\033[1;35m'
+ql_cyan='\033[1;36m'
+ql_orange='\033[1;33m'
+ql_green='\033[1;32m'
+ql_no_color='\033[0m'
+
+
 cd "$HOME"
 
 mkdir -p "$HOME/.quicklock/locks"
 
 curl https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh --output "$HOME/.quicklock/ql.sh"
 
-echo "To complete installation of 'quicklock' add the following line to your .bash_profile file:";
-
+echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
+echo "";
+echo -e "${ql_cyan}To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";
+echo "";
 echo ". \"$HOME/.quicklock/ql.sh\"";
 
