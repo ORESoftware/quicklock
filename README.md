@@ -3,7 +3,7 @@
 ## QuickLock
 
 # <i>install</i>: $ npm install -g quicklock
-# <i>install</i>: curl -o- https://rawgit.com/oresoftware/quicklock/master/install.sh | bash
+# <i>install</i>: curl -o- -f https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash
 
 
 
