@@ -13,14 +13,17 @@ function on_ql_trap {
 }
 
 function on_ql_conditional_exit {
-   if [ -t 1 ]; then        # tty -s
-        # if we are in a terminal just return, do not exit.
-        echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
-        return 0;
-    else
-        echo -e "quicklock: since we are not in a terminal, we are exiting...";
-        exit 1;
-    fi
+
+   if [[ $- == *i* ]]; then
+       # if we are in a terminal just return, do not exit.
+      echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
+      return 0;
+
+   fi
+
+     echo -e "quicklock: since we are not in a terminal, we are exiting...";
+     exit 1;
+
 }
 
 
@@ -42,9 +45,9 @@ function ql_acquire_lock {
   mkdir -p "$HOME/.quicklock/locks"
   fle=$(echo "${name}" | tr "/" _)
 
-  if [[ "$fle" =~ [^a-zA-Z0-9\-] ]]; then
+  if [[ "$fle" =~ [^a-zA-Z0-9\-\_] ]]; then
     echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
-    echo -e "${ql_magenta}quicklock: could not acquire lock.${ql_no_color}"
+    echo -e "${ql_magenta}quicklock: could not acquire lock with desired name -> '$fle'.${ql_no_color}"
     on_ql_conditional_exit
     return 0;
   fi
@@ -66,10 +69,12 @@ function ql_acquire_lock {
 
 function ql_maybe_fail {
   ##### //////////////////////////////////////////////////////////////////////////////////////////
-  if [[ "$ql_fail_fast" == "yes" ]]; then
+  if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: exiting with 1 since fail flag was set for your 'ql_release_lock' command.${ql_no_color}"
       on_ql_conditional_exit;
       return 0;
+  else
+      echo "\$ql_fail_fast was not set to 'yes' so no error.";
   fi
   #### \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 }

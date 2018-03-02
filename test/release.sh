@@ -3,10 +3,10 @@
 #ps -p $PID -o pid=
 
 
-source /Users/alexamil/WebstormProjects/oresoftware/quicklock/quicklock-trap.sh
+source /Users/alexamil/WebstormProjects/oresoftware/quicklock/ql.sh
 
-ql_acquire_lock "$PWD"
+ql_acquire_lock # "$PWD"
 
 echo "foo"
 
-ql_release_lock true
+ql_release_lock
