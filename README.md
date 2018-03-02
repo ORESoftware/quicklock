@@ -4,11 +4,11 @@
 
 ## To use the simple bash version:
 
-### <i>install</i>: `$ curl -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
+#### <i>install</i>: `$ curl -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
 
 or
 
-### <i>install</i>: `$ wget -q0 https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
+#### <i>install</i>: `$ wget -q0 https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
 
 ## To use the complex node.js version:
 
