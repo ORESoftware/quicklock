@@ -32,14 +32,12 @@ function ql_ls {
 }
 
 function ql_find {
-    for f in "$HOME/.quicklock/locks"/*; do
-      echo -e "${ql_cyan}$f${ql_no_color}"
-    done
+    ql_ls
 }
 
 function ql_acquire_lock {
   ##### //////////////////////////////////////////////////////////////////////////////////////////
-  set -e;
+#  set -e;
 
   name="${1:-$PWD}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
   mkdir -p "$HOME/.quicklock/locks"
@@ -74,7 +72,7 @@ function ql_maybe_fail {
       on_ql_conditional_exit;
       return 1;
   else
-      echo "\$ql_fail_fast was not set to 'yes' so no error.";
+      echo -e "${ql_orange}quicklock: \"\$ql_fail_fast\" was not set to \"yes\", so no error occurs if no lock was released.${ql_no_color}";
       return 1;
   fi
   #### \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -84,7 +82,11 @@ function ql_maybe_fail {
 function ql_release_lock () {
 
    if [[ ! -z "$1" ]]; then
-        quicklock_name="$1";
+        quicklock_name="${1}";
+
+   elif [[ -z "${quicklock_name}" ]]; then
+        echo "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}";
+        quicklock_name="$PWD";
    fi
 
    if [[ "$quicklock_name" != "$HOME/.quicklock/locks/"* ]]; then
