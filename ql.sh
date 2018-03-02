@@ -9,6 +9,12 @@ ql_no_color='\033[0m'
 
 # zoooom
 
+ql_quicklock_version="0.1.03"
+
+function ql_print_version {
+  echo "${ql_quicklock_version}";
+}
+
 function on_ql_trap {
    echo "quicklock: process with pid $$ was trapped.";
    ql_release_lock
