@@ -16,12 +16,12 @@ function on_ql_conditional_exit {
 
    if [[ $- == *i* ]]; then
        # if we are in a terminal just return, do not exit.
-      echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
-      return 0;
+#      echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
+      return 1;
 
    fi
 
-     echo -e "quicklock: since we are not in a terminal, we are exiting...";
+     echo -e "${ql_orange}quicklock: since we are not in a terminal, we are exiting...${ql_no_color}";
      exit 1;
 
 }
@@ -49,7 +49,7 @@ function ql_acquire_lock {
     echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
     echo -e "${ql_magenta}quicklock: could not acquire lock with desired name -> '$fle'.${ql_no_color}"
     on_ql_conditional_exit
-    return 0;
+    return 1;
   fi
 
   qln="$HOME/.quicklock/locks/${fle}.lock"
@@ -57,7 +57,7 @@ function ql_acquire_lock {
   mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}.";
     on_ql_conditional_exit;
-    return 0;
+    return 1;
   }
 
   export quicklock_name="${qln}";  # export the var *only if* above mkdir command succeeds
@@ -72,9 +72,10 @@ function ql_maybe_fail {
   if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: exiting with 1 since fail flag was set for your 'ql_release_lock' command.${ql_no_color}"
       on_ql_conditional_exit;
-      return 0;
+      return 1;
   else
       echo "\$ql_fail_fast was not set to 'yes' so no error.";
+      return 1;
   fi
   #### \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 }
@@ -87,19 +88,29 @@ function ql_release_lock () {
    fi
 
    if [[ "$quicklock_name" != "$HOME/.quicklock/locks/"* ]]; then
+
+       quicklock_name=$(echo "${quicklock_name}" | tr "/" _)
+
+      if [[ "$quicklock_name" =~ [^a-zA-Z0-9\-\_] ]]; then
+        echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
+        echo -e "${ql_magenta}quicklock: could not release lock with desired name -> '$fle'.${ql_no_color}"
+        on_ql_conditional_exit
+        return 1;
+      fi
+
        quicklock_name="$HOME/.quicklock/locks/${quicklock_name}.lock";
    fi
 
    if [[ -z "${quicklock_name}" ]]; then
      echo -e "${ql_orange}quicklock: no lockname was defined. (\$quicklock_name was not set).${ql_no_color}";
      ql_maybe_fail;
-     return 0;
+     return 1;
    fi
 
    if [[ "$HOME" == "${quicklock_name}" ]]; then
      echo -e "${ql_orange}quicklock: dangerous value set for \$quicklock_name variable..was equal to user home directory, not good.${ql_no_color}";
      ql_maybe_fail;
-     return 0;
+     return 1;
    fi
 
    rm -r "${quicklock_name}" &> /dev/null &&
