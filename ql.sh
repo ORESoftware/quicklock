@@ -45,8 +45,9 @@ function ql_release_lock () {
      return 0;
    fi
 
-   rm -rf "${quicklock_name}" || { echo "quicklock: no lock existed"; ql_maybe_fail "$1"; }
-   echo -e "${ql_green}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";
+   rm -r "${quicklock_name}" &> /dev/null &&
+   { echo -e "${ql_green}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
+   { echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail "$1"; }
    trap - EXIT  # clear/unset trap
 
 }
