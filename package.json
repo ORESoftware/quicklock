@@ -1,7 +1,7 @@
 {
   "name": "quicklock",
   "bin": {
-    "quicklock": "index.js"
+    "quicklock": "lib/index.js"
   },
   "version": "0.0.103",
   "description": "Quick locks for scripts",

@@ -27,7 +27,6 @@ int main(int argc, const char * argv[]) {
     }
 
 
-while(true)
     for(;;) {
         memset(&ke,0,sizeof(struct kevent));
         if(kevent(kq, NULL, 0, &ke, 1, NULL)<0){
