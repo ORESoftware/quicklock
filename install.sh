@@ -19,4 +19,4 @@ curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware
 echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
 echo -e "${ql_cyan} => To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";
 echo ". \"\$HOME/.quicklock/ql.sh\"";
-
+echo "";
