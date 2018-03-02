@@ -7,4 +7,6 @@ source /Users/alexamil/WebstormProjects/oresoftware/quicklock/quicklock-trap.sh
 
 ql_acquire_lock "$PWD"
 
-tsc -w
+echo "foo"
+
+ql_release_lock true
