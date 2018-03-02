@@ -68,8 +68,8 @@ function ql_maybe_fail {
   ##### //////////////////////////////////////////////////////////////////////////////////////////
   if [[ "$ql_fail_fast" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: exiting with 1 since fail flag was set for your 'ql_release_lock' command.${ql_no_color}"
-       on_ql_conditional_exit;
-       return 0;
+      on_ql_conditional_exit;
+      return 0;
   fi
   #### \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 }
