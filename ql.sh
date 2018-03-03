@@ -15,7 +15,7 @@ export ql_no_color='\033[0m'
 #echo "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
 
 
-function ql_log_colors {
+ql_log_colors (){
     echo "sourcing quicklock.sh"
     echo -e "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
     echo "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
@@ -23,16 +23,16 @@ function ql_log_colors {
 
 export ql_quicklock_version="0.0.103"
 
-function ql_print_version {
+ ql_print_version (){
   echo "${ql_quicklock_version}";
 }
 
-function on_ql_trap {
+ on_ql_trap (){
 #   echo "quicklock: process with pid $$ was trapped.";
    ql_release_lock
 }
 
-function on_ql_conditional_exit {
+ on_ql_conditional_exit (){
 
    if [[ $- == *i* ]]; then
        # if we are in a terminal just return, do not exit.
@@ -45,16 +45,51 @@ function on_ql_conditional_exit {
 }
 
 
-function ql_ls {
+ ql_ls () {
    local home="$HOME/.quicklock/locks"
    for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
 }
 
-function ql_find {
-    ql_ls
+ ql_find () {
+
+  local lockname="$quicklock_name";
+
+    if [[ ! -z "$1" ]]; then
+      lockname="$1";
+    fi
+
+    if [[ "$lockname" != "$HOME/.quicklock/locks/"* ]]; then
+
+       lockname=$(echo "${lockname}" | tr "/" _)
+
+      if [[ "$lockname" =~ [^a-zA-Z0-9\-\_] ]]; then
+        echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
+        on_ql_conditional_exit
+        return 1;
+      fi
+
+        if [[ -z "$lockname" ]]; then
+            echo "quicklock: no lockname is available, please pass a valid lockname.";
+            return 1;
+        fi
+
+       lockname="$HOME/.quicklock/locks/${lockname}.lock";
+   fi
+
+   if [[ -z "$lockname" ]]; then
+      echo "quicklock: no lockname is available, please pass a valid lockname.";
+      return 1;
+   fi
+
+    # echo the contents of the directory, should log PID if exists
+    ls "$lockname" || {
+       echo "quicklock: it does not appear that the lock exists for lockname: '$lockname'"
+       return 1;
+     }
 }
 
-function ql_acquire_lock {
+
+ql_acquire_lock () {
 
   local name="${1:-$PWD}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
   mkdir -p "$HOME/.quicklock/locks"
@@ -69,13 +104,14 @@ function ql_acquire_lock {
 
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
-    mkdir "${qln}" &> /dev/null || {
+  mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}";
     echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
     on_ql_conditional_exit;
     return 1;
   }
 
+  mkdir "${qln}/$$";  # add the PID inside the lock dir
   export quicklock_name="${qln}";  # export the var *only if* above mkdir command succeeds
   trap on_ql_trap EXIT;
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
@@ -83,7 +119,7 @@ function ql_acquire_lock {
 }
 
 
-function ql_maybe_fail {
+ ql_maybe_fail () {
 
   if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: exiting with 1 since fail flag was set for your 'ql_release_lock' command.${ql_no_color}"
@@ -97,7 +133,7 @@ function ql_maybe_fail {
 }
 
 
-function ql_release_lock () {
+ ql_release_lock () {
 
    if [[ ! -z "$1" ]]; then
         quicklock_name="${1}";

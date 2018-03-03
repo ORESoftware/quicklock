@@ -15,7 +15,7 @@ or
 #!/usr/bin/env bash
 
 # acquire lock. will exit with exit code 1, if lock cannot be acquired the first time
-# first and only argument is an optional lockname, if no argument passed, $PWD will be used
+# first and only argument is an optional lockname, if no argument is passed, $PWD will be used as a good default.
 
 ql_acquire_lock "$PWD"  
 
@@ -50,6 +50,28 @@ dosomethingelse here
 
 
 ```
+
+## Debugging
+
+To get a list of all the quicklock locks that exist, use:
+
+`$ ql_ls`
+
+To determine which process holds a lock, use:
+
+`$ ql_find <lockname>  # lockname is optional`
+
+`ql_find` echos a pid, if the lock exists. To find out information about that pid, you can use:
+
+`$ ps -p <pid>`
+
+or just do this:
+
+`$ ql_find | xargs ps -p`
+
+
+
+
 
 
 
