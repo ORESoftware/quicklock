@@ -36,14 +36,12 @@ function on_ql_conditional_exit {
 
    if [[ $- == *i* ]]; then
        # if we are in a terminal just return, do not exit.
-#      echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
+       # debugging: echo -e "${ql_orange}quicklock: since we are in a terminal, not exiting.${ql_no_color}";
       return 1;
-
    fi
 
-     echo -e "${ql_orange}quicklock: since we are not in a terminal, we are exiting...${ql_no_color}";
-     exit 1;
-
+    # debugging:  echo -e "${ql_orange}quicklock: since we are not in a terminal, we are exiting...${ql_no_color}";
+    exit 1;
 }
 
 
@@ -71,7 +69,7 @@ function ql_acquire_lock {
 
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
-  mkdir "${qln}" &> /dev/null || {
+    mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}";
     echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
     on_ql_conditional_exit;
