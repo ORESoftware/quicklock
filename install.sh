@@ -22,3 +22,8 @@ echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
 echo -e "${ql_cyan} => To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";
 echo "  echo \"loading quicklock\" && . \"\$HOME/.quicklock/ql.sh\"";  # `.` is like `source` but more cross-platform
 echo "";
+
+
+# that's it lulz
+
+

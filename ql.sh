@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-
+export ql_quicklock_version="0.0.103"
 
 export ql_gray='\033[1;30m'
 export ql_magenta='\033[1;35m'
@@ -10,20 +10,14 @@ export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
 
-#echo "sourcing quicklock.sh"
-#echo -e "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
-#echo "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
-
-
 ql_log_colors (){
     echo "sourcing quicklock.sh"
     echo -e "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
     echo "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
 }
 
-export ql_quicklock_version="0.0.103"
 
- ql_print_version (){
+ql_print_version (){
   echo "${ql_quicklock_version}";
 }
 
@@ -52,7 +46,7 @@ export ql_quicklock_version="0.0.103"
 
  ql_find () {
 
-  local lockname="$quicklock_name";
+    local lockname="$quicklock_name";
 
     if [[ ! -z "$1" ]]; then
       lockname="$1";
@@ -74,7 +68,7 @@ export ql_quicklock_version="0.0.103"
         fi
 
        lockname="$HOME/.quicklock/locks/${lockname}.lock";
-   fi
+    fi
 
    if [[ -z "$lockname" ]]; then
       echo "quicklock: no lockname is available, please pass a valid lockname.";
