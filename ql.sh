@@ -16,6 +16,14 @@ ql_log_colors (){
     echo "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
 }
 
+ql_add_color(){
+    export ql_gray='\033[1;30m'
+    export ql_magenta='\033[1;35m'
+    export ql_cyan='\033[1;36m'
+    export ql_orange='\033[1;33m'
+    export ql_green='\033[1;32m'
+    export ql_no_color='\033[0m'
+}
 
 ql_print_version (){
   echo "${ql_quicklock_version}";
@@ -171,8 +179,31 @@ ql_acquire_lock () {
 
 }
 
+ql_no_color () {
+    export ql_gray=''
+    export ql_magenta=''
+    export ql_cyan=''
+    export ql_orange=''
+    export ql_green=''
+    export ql_no_color=''
+}
+
+ql_no_colors(){
+  ql_no_color
+}
+
+ql_add_colors(){
+ ql_add_color
+}
 
 # export all of the functions
+
+export -f ql_add_colors;
+export -f ql_add_color;
+
+export -f ql_no_color;
+export -f ql_no_colors;
+
 export -f ql_log_colors;
 export -f ql_maybe_fail;
 export -f on_ql_conditional_exit;

@@ -70,6 +70,18 @@ or just do this:
 `$ ql_find | xargs ps -p`
 
 
+### Colors
+
+Terminal colors/styling is on by default.
+
+To turn off color use:
+
+`$ ql_no_color`
+
+to turn colors back on, use:
+
+`$ ql_add_color`
+
 
 
 
