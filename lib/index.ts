@@ -31,35 +31,43 @@ if (!mutexKey) {
 
 const home = process.env.HOME;
 const quicklockHome = path.resolve(home + '/.quicklock');
+const quicklocksHm = path.resolve(quicklockHome + '/locks');
 
 try {
   fs.mkdirSync(quicklockHome);
 }
 catch (err) {
+  // console.error('error making hm dir:', err.message);
   if (!/file already exists/gi.test(String(err.message))) {
     throw err;
   }
 }
 
-const cleanMutexKey = path.resolve(quicklockHome + '/' + String(mutexKey).replace(/\W+/g, '_'));
+try {
+  fs.mkdirSync(quicklocksHm);
+}
+catch (err) {
+  // console.error('error making hm locks dir:', err.message);
+  if (!/file already exists/gi.test(String(err.message))) {
+    throw err;
+  }
+}
 
-// console.log('quicklock: quicklock mutex key:', cleanMutexKey);
+const cleanMutexKey = path.resolve(quicklocksHm + '/' + String(mutexKey).replace(/\W+/g, '_') + '.lock');
 
-// process.once('exit', function () {
-//   fs.unlinkSync(cleanMutexKey);
-// });
-//
-// process.once('exit', function () {
-//   fs.unlinkSync(cleanMutexKey);
-// });
-//
+console.log('quicklock: quicklock mutex key:', cleanMutexKey);
 
-// process.once('exit', function () {
-//   fs.unlinkSync(cleanMutexKey);
-// });
 
 try {
-  fs.writeFileSync(cleanMutexKey, String(process.pid), {flag: 'wx'});
+
+  let files = fs.readdirSync(quicklocksHm);
+
+  console.log('the files before:', files);
+  fs.mkdirSync(cleanMutexKey);
+  console.log('created mutex key dir.');
+
+  files = fs.readdirSync(quicklocksHm);
+  console.log('the files after:', files);
 }
 catch (err) {
   console.error('quicklock:', err.message);
@@ -72,10 +80,10 @@ catch (err) {
 
 const unlockProcess = path.resolve(__dirname + '/unlock.js');
 
-const to = setTimeout(function () {
-  console.error('Could not launch quicklock child.');
-  process.exit(1);
-}, 3000);
+// const to = setTimeout(function () {
+//   console.error('Could not launch quicklock child.');
+//   process.exit(1);
+// }, 3000);
 
 const k = cp.spawn(`node`, [unlockProcess], {
   detached: true,
@@ -85,21 +93,34 @@ const k = cp.spawn(`node`, [unlockProcess], {
   })
 });
 
-k.stdout.setEncoding('utf8');
-k.stderr.setEncoding('utf8');
-k.stderr.pipe(process.stderr);
+k.unref();
 
-k.once('exit', function () {
-  fs.unlinkSync(cleanMutexKey);
-});
+// k.stdout.setEncoding('utf8');
+// k.stderr.setEncoding('utf8');
+//
+//
+// const strm = fs.createWriteStream(process.cwd() + '/debug.log');
+// k.stderr.pipe(strm, {end: false});
+// k.stdout.pipe(strm, {end: false});
+//
+// k.once('exit', function () {
+//   console.log('unlock process is exiting.');
+//   // fs.rmdirSync(cleanMutexKey);
+// });
 
 let stdout = '';
 
 k.stdout.on('data', function (d) {
   stdout += String(d);
   if (/quicklock child listening/ig.test(stdout)) {
-    clearTimeout(to);
-    process.exit(0);
+
+
+    k.stdout.removeAllListeners();
+    k.unref();
+
+    // should exit now
+    // clearTimeout(to);
+    // process.exit(0);
   }
 });
 

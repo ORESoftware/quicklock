@@ -15,6 +15,9 @@ or
 
 #####  <i>install</i>: `$ npm install -g quicklock`
 
+On linux, you will need to run: <br>
+`$ sudo setcap cap_sys_ptrace+ep bin/linux_waiter`
+
 
 ### Simple usage
 

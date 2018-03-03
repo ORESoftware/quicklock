@@ -2,9 +2,12 @@
 
 #ps -p $PID -o pid=
 
+set -e;
 
-source /Users/alexamil/WebstormProjects/oresoftware/quicklock/quicklock-trap.sh
+#source ./ql.sh
 
-ql_acquire_lock "$PWD"
+#ql_acquire_lock "$PWD"
+
+quicklock $$
 
 tsc -w

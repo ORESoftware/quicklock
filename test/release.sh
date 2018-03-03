@@ -2,8 +2,9 @@
 
 #ps -p $PID -o pid=
 
+set -e;
 
-source /Users/alexamil/WebstormProjects/oresoftware/quicklock/ql.sh
+source ./ql.sh
 
 ql_acquire_lock # "$PWD"
 
