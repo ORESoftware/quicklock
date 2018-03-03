@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export ql_quicklock_version="0.0.103"
+export ql_quicklock_version="0.0.104"
 
 export ql_gray='\033[1;30m'
 export ql_magenta='\033[1;35m'
