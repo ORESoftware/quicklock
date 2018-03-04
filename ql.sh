@@ -30,7 +30,8 @@ ql_print_version (){
 }
 
  on_ql_trap (){
-#   echo "quicklock: process with pid $$ was trapped.";
+   echo "quicklock: process with pid '$$' caught/trapped a signal.";
+   echo "quicklock: signal trapped: '$1'."
    ql_release_lock
 }
 
@@ -43,7 +44,13 @@ ql_print_version (){
    fi
 
     # debugging:  echo -e "${ql_orange}quicklock: since we are not in a terminal, we are exiting...${ql_no_color}";
-    exit 1;
+
+    if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
+       exit 1;
+    fi
+
+    return 1;
+
 }
 
 
@@ -90,6 +97,10 @@ ql_print_version (){
      }
 }
 
+ql_remove_all_locks (){
+   rm -rf "$HOME/.quicklock/locks/"*
+}
+
 
 ql_acquire_lock () {
 
@@ -115,8 +126,25 @@ ql_acquire_lock () {
 
   mkdir "${qln}/$$";  # add the PID inside the lock dir
   export quicklock_name="${qln}";  # export the var *only if* above mkdir command succeeds
+
   trap on_ql_trap EXIT;
+  trap on_ql_trap INT;
+  trap on_ql_trap TERM;
+  trap on_ql_trap SIGINT;
+  trap on_ql_trap SIGTERM;
+  trap on_ql_trap SIGHUP;
+  trap on_ql_trap SIGTRAP;
+
+  echo "process has trapped all signals.";
+#  trap on_ql_trap SIGINT;
+#  trap on_ql_trap SIGTERM;
+#  trap on_ql_trap SIGHUP
+#  trap on_ql_trap HUP;
+
+  echo "process id requesting lock: $$"
+  echo "parent of id: $(ps -o ppid= -p $$)";
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
+#  wait;
 
 }
 
@@ -175,7 +203,13 @@ ql_acquire_lock () {
    { echo -e "${ql_green}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
    { echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
-   trap - EXIT  # clear/unset trap
+   trap - EXIT; # clear/unset trap
+   trap - SIGINT; # clear/unset trap
+   trap - SIGTERM; # clear/unset trap
+   trap - INT; # clear/unset trap
+   trap - TERM; # clear/unset trap
+   trap - SIGHUP; # clear/unset trap
+   trap - SIGTRAP; # clear/unset trap
 
 }
 
@@ -204,6 +238,7 @@ export -f ql_add_color;
 export -f ql_no_color;
 export -f ql_no_colors;
 
+export -f ql_remove_all_locks
 export -f ql_log_colors;
 export -f ql_maybe_fail;
 export -f on_ql_conditional_exit;
