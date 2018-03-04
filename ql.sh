@@ -67,6 +67,11 @@ ql_print_version (){
       lockname="$1";
     fi
 
+    if [[ -z "$lockname" ]]; then
+          echo "quicklock: no lockname is available, defaulting to \$PWD as lockname.";
+          lockname="$PWD";
+     fi
+
     if [[ "$lockname" != "$HOME/.quicklock/locks/"* ]]; then
 
        lockname=$(echo "${lockname}" | tr "/" _)
@@ -76,11 +81,6 @@ ql_print_version (){
         on_ql_conditional_exit
         return 1;
       fi
-
-        if [[ -z "$lockname" ]]; then
-            echo "quicklock: no lockname is available, defaulting to \$PWD as lockname.";
-            lockname="$PWD";
-        fi
 
        lockname="$HOME/.quicklock/locks/${lockname}.lock";
     fi
