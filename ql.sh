@@ -35,7 +35,14 @@ ql_echo_current_lockname (){
    echo $(ql_get_lockname)
 }
 
- on_ql_trap (){
+on_ql_trap (){
+
+   echo "trippity trappity: $ql_no_more_trap";
+
+   if [[ "$ql_no_more_trap" == "yes" ]]; then
+      return 0;
+   fi
+
    echo "quicklock: process with pid '$$' caught/trapped a signal.";
    echo "quicklock: signal trapped: '$1'."
    ql_release_lock
@@ -87,6 +94,11 @@ ql_write_message () {
        return 1;
    fi
 
+   if [[ ! -p "${lockname}/${pid}" ]]; then
+      >&2 echo -e "${ql_orange}quicklock: error - no named piped with path '${lockname}/${pid}'.${ql_no_color}";
+      return 1;
+   fi
+
    echo "foo" > "${lockname}/${pid}"
    echo "sent message"
 }
@@ -122,6 +134,10 @@ ql_get_lockname (){
 
 }
 
+ql_noop(){
+    echo "";
+}
+
 
  ql_get_lockowner_pid () {
 
@@ -147,10 +163,11 @@ ql_remove_all_locks (){
 
 ql_on_named_pipe_msg (){
 
-  echo "quicklock: received piped message...$1,$2"
+  echo -e "quicklock: received piped message.";
   local ql_msg="$1";
-  echo "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}"
-   ql_release_lock
+  echo -e "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}"
+  ql_release_lock
+
 #     exit 1;
 #     trap - EXIT;
 
@@ -158,7 +175,13 @@ ql_on_named_pipe_msg (){
 
 ql_acquire_lock () {
 
-  local name="${1:-$PWD}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
+  local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
+
+  if [[ -z "$name" ]]; then
+     echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}"
+     name="$PWD";
+  fi
+
   mkdir -p "$HOME/.quicklock/locks"
   fle=$(echo "${name}" | tr "/" _)
 
@@ -183,21 +206,20 @@ ql_acquire_lock () {
 
   trap on_ql_trap EXIT;
 
-#  trap on_ql_trap USR1;
-#  trap on_ql_trap USR2;
-#   trap on_ql_trap SIGUSR1;
-#  trap on_ql_trap SIGUSR2;
-#  trap on_ql_trap SIGHUP;
-#  trap on_ql_trap HUP;
+    #  trap on_ql_trap USR1;
+    #  trap on_ql_trap USR2;
+    #  trap on_ql_trap SIGUSR1;
+    #  trap on_ql_trap SIGUSR2;
+    #  trap on_ql_trap SIGHUP;
+    #  trap on_ql_trap HUP;
 
 
-  echo "quicklock: process id requesting lock: $$"
-  echo "quicklock: parent process id of above pid: $(ps -o ppid= -p $$)";
+  echo -e "${ql_gray}quicklock: process id requesting lock: $$, parent process id: $(ps -o ppid= -p $$)${ql_no_color}."
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
 
   if [[ "$ql_allow_ipc" == "yes" ]]; then
 
-    echo "quicklock: process is reading from named pipe to listen for incoming messages regarding releasing lock.";
+    echo -e "quicklock: process is reading from named pipe to listen for incoming messages regarding releasing lock.";
     while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
 
   fi
@@ -285,7 +307,10 @@ ql_release_lock () {
    { echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
    { >&2 echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
+    echo "no more trap being set lol!!";
+   export ql_no_more_trap="yes";
    trap - EXIT; # clear/unset trap
+   trap ql_noop EXIT;
 
 }
 
@@ -331,6 +356,8 @@ export -f ql_on_named_pipe_msg;
 export -f ql_echo_current_lockname;
 export -f ql_get_lockname;
 export -f ql_write_message;
+export -f ql_noop;
 
 # that's it lulz
+
 
