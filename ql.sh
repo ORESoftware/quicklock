@@ -78,8 +78,8 @@ ql_print_version (){
       fi
 
         if [[ -z "$lockname" ]]; then
-            echo "quicklock: no lockname is available, please pass a valid lockname.";
-            return 1;
+            echo "quicklock: no lockname is available, defaulting to \$PWD as lockname.";
+            lockname="$PWD";
         fi
 
        lockname="$HOME/.quicklock/locks/${lockname}.lock";
@@ -169,7 +169,7 @@ ql_acquire_lock () {
         quicklock_name="${1}";
 
    elif [[ -z "${quicklock_name}" ]]; then
-        echo "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}";
+        echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}";
         quicklock_name="$PWD";
    fi
 
