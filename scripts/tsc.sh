@@ -2,6 +2,8 @@
 
 set -e;
 
+export ql_prevent_exit="yes";
+
 ql_acquire_lock
 
 tsc -w

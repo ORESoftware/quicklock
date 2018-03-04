@@ -10,6 +10,13 @@ export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
 
+mkdir -p "$HOME/.quicklock"
+
+if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then
+    mkfifo "$HOME/.quicklock/ql_named_pipe";
+fi
+
+
 ql_log_colors (){
     echo "sourcing quicklock.sh"
     echo -e "${ql_cyan}sourcing quicklock.sh${ql_no_color}";
@@ -35,6 +42,13 @@ ql_print_version (){
    ql_release_lock
 }
 
+ql_unlock_process(){
+#  kill -10 "$1"  #  kill <pid> given by $1, with SIGUSR1 signal...
+
+ echo "$1" > "$HOME/.quicklock/ql_named_pipe"
+}
+
+
  on_ql_conditional_exit (){
 
    if [[ $- == *i* ]]; then
@@ -49,7 +63,7 @@ ql_print_version (){
        return 1;
     fi
 
-    exit 1;
+#    exit 1;
 }
 
 
@@ -99,6 +113,21 @@ ql_remove_all_locks (){
    rm -rf "$HOME/.quicklock/locks/"*
 }
 
+ql_on_named_pipe_msg (){
+  echo "quicklock: received piped message...$1,$2"
+  msg="$1"; current_pid="$2"
+
+  if [[ -z "$1" || -z "$2" ]]; then
+    echo "quicklock: at least one message was empty so this is a no-op.";
+    return 0;
+  fi
+
+  if [[ "$msg" == "$current_pid" ]]; then
+     echo "quicklock: releasing lock because of piped message."
+     ql_release_lock
+     trap - EXIT;
+  fi
+}
 
 ql_acquire_lock () {
 
@@ -126,12 +155,13 @@ ql_acquire_lock () {
   export quicklock_name="${qln}";  # export the var *only if* above mkdir command succeeds
 
   trap on_ql_trap EXIT;
-  trap on_ql_trap INT;
-  trap on_ql_trap TERM;
+#  trap on_ql_trap INT;
+#  trap on_ql_trap TERM;
+#  trap on_ql_trap SIGUSR1;
 
-  trap "on_ql_trap" EXIT;
-  trap "on_ql_trap" INT;
-  trap "on_ql_trap" TERM;
+#  trap "on_ql_trap" EXIT;
+#  trap "on_ql_trap" INT;
+#  trap "on_ql_trap" TERM;
 
 #  trap on_ql_trap SIGINT;
 #  trap on_ql_trap SIGTERM;
@@ -147,6 +177,16 @@ ql_acquire_lock () {
   echo "process id requesting lock: $$"
   echo "parent of id: $(ps -o ppid= -p $$)";
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
+
+#  cat "$HOME/.quicklock/ql_named_pipe" | ql_on_named_pipe_msg &
+
+#     while read "$HOME/.quicklock/ql_named_pipe"; do
+#      ql_on_named_pipe_msg "$data"
+#     done &
+
+   my_named_pipe="$HOME/.quicklock/ql_named_pipe"
+   while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
+
 #  wait;
 
 }
@@ -203,14 +243,14 @@ ql_acquire_lock () {
    fi
 
    rm -r "${quicklock_name}" &> /dev/null &&
-   { echo -e "${ql_green}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
+   { echo -e "${ql_orange}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
    { echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
    trap - EXIT; # clear/unset trap
 #   trap - SIGINT; # clear/unset trap
 #   trap - SIGTERM; # clear/unset trap
-   trap - INT; # clear/unset trap
-   trap - TERM; # clear/unset trap
+#   trap - INT; # clear/unset trap
+#   trap - TERM; # clear/unset trap
 #   trap - SIGHUP; # clear/unset trap
 #   trap - SIGTRAP; # clear/unset trap
 
@@ -251,6 +291,8 @@ export -f ql_release_lock;
 export -f ql_find;
 export -f ql_ls;
 export -f ql_print_version;
+export -f ql_unlock_process;
+export -f ql_on_named_pipe_msg;
 
 
 # that's it lulz
