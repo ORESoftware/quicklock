@@ -149,8 +149,7 @@ ql_on_named_pipe_msg (){
 
   echo "quicklock: received piped message...$1,$2"
   local ql_msg="$1";
-
-  echo "quicklock: releasing lock because of piped message."
+  echo "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}"
    ql_release_lock
 #     exit 1;
 #     trap - EXIT;
@@ -283,7 +282,7 @@ ql_release_lock () {
 
 
    rm -r "${quicklock_name}" &> /dev/null &&
-   { echo -e "${ql_orange}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
+   { echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
    { >&2 echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
    trap - EXIT; # clear/unset trap
