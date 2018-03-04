@@ -2,14 +2,17 @@
 
 ## QuickLock
 
+******************************************************************************************
+
 ##### <i>install</i>: `$ curl -o- https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
 
 or
 
 ##### <i>install</i>: `$ wget -q -O - https://raw.githubusercontent.com/oresoftware/quicklock/master/install.sh | bash`
 
+******************************************************************************************
 
-### Simple usage
+## Simple usage
 
 ```bash
 #!/usr/bin/env bash
@@ -26,6 +29,8 @@ foobarbaz --watch   # this can be whatever you want
 # when the script/process exits, lock will automatically be released
 
 ```
+
+*******************************************************************************************
 
 ### Explicit unlocking
 
@@ -50,6 +55,7 @@ dosomethingelse here
 
 
 ```
+*****************************************************************************
 
 ## Debugging
 
@@ -69,6 +75,8 @@ or just do this:
 
 `$ ql_find | xargs ps -p`
 
+
+******************************************************************************
 
 ### Colors
 
