@@ -242,6 +242,17 @@ ql_acquire_lock () {
 
 }
 
+# mod: example
+# txt: this module is an example for documentation.
+#      The txt sections as also opt and env ones can
+#      be multiline if lines are kept vertical aligned.
+
+# fun: sum num1 num2
+# txt: sum two numbers and output the result
+# opt: num1: the first number to sum
+# opt: num2: the second number to sum
+# use: sum 1 3
+# api: sum
 ql_release_lock_force(){
   ql_release_lock "$@" --force
 }
@@ -294,7 +305,7 @@ ql_release_lock () {
 
    local current_pid="$$"
 #   local pid_inside="$(ls "${quicklock_name}" | head -n 1)";
-   local pid_inside="$(ls "${quicklock_name}")";
+   local pid_inside="$(ls "${quicklock_name}" 2> /dev/null)";
 
 
    if [[ "${is_force}" != "yes" && ! -z "${pid_inside}" ]]; then
@@ -343,7 +354,6 @@ export -f ql_no_color;
 export -f ql_no_colors;
 
 export -f ql_remove_all_locks
-export -f ql_log_colors;
 export -f ql_maybe_fail;
 export -f on_ql_conditional_exit;
 export -f on_ql_trap;
