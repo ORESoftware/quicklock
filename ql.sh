@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 export ql_quicklock_version="0.0.104"
+export ql_source_file="$HOME/.quicklock/ql.sh";
 
 export ql_gray='\033[1;30m'
 export ql_magenta='\033[1;35m'
@@ -9,12 +10,11 @@ export ql_orange='\033[1;33m'
 export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
-
 mkdir -p "$HOME/.quicklock"
 
-if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then
-    mkfifo "$HOME/.quicklock/ql_named_pipe";
-fi
+# if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then
+#    mkfifo "$HOME/.quicklock/ql_named_pipe";
+# fi
 
 
 ql_log_colors (){
@@ -34,6 +34,10 @@ ql_add_color(){
 
 ql_print_version (){
   echo "${ql_quicklock_version}";
+}
+
+ql_echo_current_lockname (){
+   echo "$quicklock_name"
 }
 
  on_ql_trap (){
@@ -248,10 +252,12 @@ ql_no_color () {
 }
 
 ql_no_colors(){
+  # this is just an alias
   ql_no_color
 }
 
 ql_add_colors(){
+  # this is just an alias
  ql_add_color
 }
 
@@ -275,7 +281,7 @@ export -f ql_ls;
 export -f ql_print_version;
 export -f ql_unlock_process;
 export -f ql_on_named_pipe_msg;
-
+export -f ql_echo_current_lockname;
 
 # that's it lulz
 
