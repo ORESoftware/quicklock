@@ -45,12 +45,11 @@ ql_print_version (){
 
     # debugging:  echo -e "${ql_orange}quicklock: since we are not in a terminal, we are exiting...${ql_no_color}";
 
-    if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
-       exit 1;
+    if [[ "$ql_prevent_exit" == "yes" || "$ql_prevent_exit" == "yes" ]]; then
+       return 1;
     fi
 
-    return 1;
-
+    exit 1;
 }
 
 
@@ -69,7 +68,7 @@ ql_print_version (){
 
     if [[ -z "$lockname" ]]; then
           echo "quicklock: no lockname is available, defaulting to \$PWD as lockname.";
-          lockname="$PWD";
+          lockname="$PWD.lock";
     fi
 
     lockname=$(echo "${lockname}" | tr "/" _)
@@ -129,10 +128,15 @@ ql_acquire_lock () {
   trap on_ql_trap EXIT;
   trap on_ql_trap INT;
   trap on_ql_trap TERM;
-  trap on_ql_trap SIGINT;
-  trap on_ql_trap SIGTERM;
-  trap on_ql_trap SIGHUP;
-  trap on_ql_trap SIGTRAP;
+
+  trap "on_ql_trap" EXIT;
+  trap "on_ql_trap" INT;
+  trap "on_ql_trap" TERM;
+
+#  trap on_ql_trap SIGINT;
+#  trap on_ql_trap SIGTERM;
+#  trap on_ql_trap SIGHUP;
+#  trap on_ql_trap SIGTRAP;
 
   echo "process has trapped all signals.";
 #  trap on_ql_trap SIGINT;
@@ -203,12 +207,12 @@ ql_acquire_lock () {
    { echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
    trap - EXIT; # clear/unset trap
-   trap - SIGINT; # clear/unset trap
-   trap - SIGTERM; # clear/unset trap
+#   trap - SIGINT; # clear/unset trap
+#   trap - SIGTERM; # clear/unset trap
    trap - INT; # clear/unset trap
    trap - TERM; # clear/unset trap
-   trap - SIGHUP; # clear/unset trap
-   trap - SIGTRAP; # clear/unset trap
+#   trap - SIGHUP; # clear/unset trap
+#   trap - SIGTRAP; # clear/unset trap
 
 }
 
