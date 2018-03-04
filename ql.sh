@@ -37,14 +37,15 @@ ql_echo_current_lockname (){
 
 on_ql_trap (){
 
-   echo "trippity trappity: $ql_no_more_trap";
+#   echo "trippity trappity: $ql_no_more_trap";
+#
+#   if [[ "$ql_no_more_trap" == "yes" ]]; then
+#      return 0;
+#   fi
 
-   if [[ "$ql_no_more_trap" == "yes" ]]; then
-      return 0;
-   fi
-
+   echo "";
    echo "quicklock: process with pid '$$' caught/trapped a signal.";
-   echo "quicklock: signal trapped: '$1'."
+#   echo "quicklock: signal trapped: '$1'."
    ql_release_lock
 }
 
@@ -204,6 +205,7 @@ ql_acquire_lock () {
   my_named_pipe="${qln}/$$"
   mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
 
+  export ql_current_lockname="${qln}";
   trap on_ql_trap EXIT;
 
     #  trap on_ql_trap USR1;
@@ -247,12 +249,12 @@ ql_release_lock_force(){
 
 ql_release_lock () {
 
-    local quicklock_name="";
+    local quicklock_name="$ql_current_lockname";
     local is_force="nope";
 
     local last="$(echo ${@: -1})"
     if [[ "${last}" == "--force" ]]; then
-      echo "${ql_magenta}quicklock: warning using --force.${ql_no_color}";
+      echo -e "${ql_magenta}quicklock: warning using --force.${ql_no_color}";
       is_force="yes"
     fi
 
@@ -307,7 +309,6 @@ ql_release_lock () {
    { echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";  } ||
    { >&2 echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail; }
 
-    echo "no more trap being set lol!!";
    export ql_no_more_trap="yes";
    trap - EXIT; # clear/unset trap
    trap ql_noop EXIT;
