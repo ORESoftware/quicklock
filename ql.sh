@@ -70,18 +70,17 @@ ql_print_version (){
     if [[ -z "$lockname" ]]; then
           echo "quicklock: no lockname is available, defaulting to \$PWD as lockname.";
           lockname="$PWD";
-     fi
+    fi
 
-    if [[ "$lockname" != "$HOME/.quicklock/locks/"* ]]; then
+    lockname=$(echo "${lockname}" | tr "/" _)
 
-       lockname=$(echo "${lockname}" | tr "/" _)
-
-      if [[ "$lockname" =~ [^a-zA-Z0-9\-\_] ]]; then
+    if [[ "$lockname" =~ [^a-zA-Z0-9\-\_] ]]; then
         echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
         on_ql_conditional_exit
         return 1;
-      fi
+    fi
 
+    if [[ "$lockname" != "$HOME/.quicklock/locks/"* ]]; then
        lockname="$HOME/.quicklock/locks/${lockname}.lock";
     fi
 
