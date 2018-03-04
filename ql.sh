@@ -43,9 +43,13 @@ ql_print_version (){
 }
 
 ql_unlock_process(){
-#  kill -10 "$1"  #  kill <pid> given by $1, with SIGUSR1 signal...
+#  kill -SIGUSR1 "$1"  #  kill <pid> given by $1, with SIGUSR1 signal...
+#  kill -SIGUSR2 "$1"
 
- echo "$1" > "$HOME/.quicklock/ql_named_pipe"
+#  kill -10 "$1" $ on linux
+# echo "$1" > "$HOME/.quicklock/ql_named_pipe"
+
+  kill -TERM "$1";
 }
 
 
@@ -63,7 +67,8 @@ ql_unlock_process(){
        return 1;
     fi
 
-#    exit 1;
+    exit 1;
+
 }
 
 
@@ -114,18 +119,21 @@ ql_remove_all_locks (){
 }
 
 ql_on_named_pipe_msg (){
+
   echo "quicklock: received piped message...$1,$2"
-  msg="$1"; current_pid="$2"
+  local ql_msg="$1";
+  local ql_current_pid="$2"
 
   if [[ -z "$1" || -z "$2" ]]; then
     echo "quicklock: at least one message was empty so this is a no-op.";
     return 0;
   fi
 
-  if [[ "$msg" == "$current_pid" ]]; then
+  if [[ "$ql_msg" == "$ql_current_pid" ]]; then
      echo "quicklock: releasing lock because of piped message."
      ql_release_lock
-     trap - EXIT;
+     exit 1;
+#     trap - EXIT;
   fi
 }
 
@@ -155,39 +163,13 @@ ql_acquire_lock () {
   export quicklock_name="${qln}";  # export the var *only if* above mkdir command succeeds
 
   trap on_ql_trap EXIT;
-#  trap on_ql_trap INT;
-#  trap on_ql_trap TERM;
-#  trap on_ql_trap SIGUSR1;
 
-#  trap "on_ql_trap" EXIT;
-#  trap "on_ql_trap" INT;
-#  trap "on_ql_trap" TERM;
-
-#  trap on_ql_trap SIGINT;
-#  trap on_ql_trap SIGTERM;
-#  trap on_ql_trap SIGHUP;
-#  trap on_ql_trap SIGTRAP;
-
-  echo "process has trapped all signals.";
-#  trap on_ql_trap SIGINT;
-#  trap on_ql_trap SIGTERM;
-#  trap on_ql_trap SIGHUP
-#  trap on_ql_trap HUP;
-
-  echo "process id requesting lock: $$"
-  echo "parent of id: $(ps -o ppid= -p $$)";
+  echo "quicklock: process id requesting lock: $$"
+  echo "quicklock: parent process id of above pid: $(ps -o ppid= -p $$)";
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
 
-#  cat "$HOME/.quicklock/ql_named_pipe" | ql_on_named_pipe_msg &
-
-#     while read "$HOME/.quicklock/ql_named_pipe"; do
-#      ql_on_named_pipe_msg "$data"
-#     done &
-
-   my_named_pipe="$HOME/.quicklock/ql_named_pipe"
-   while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
-
-#  wait;
+    #   my_named_pipe="$HOME/.quicklock/ql_named_pipe"
+    #   while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
 
 }
 
