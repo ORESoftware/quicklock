@@ -207,6 +207,8 @@ ql_acquire_lock () {
   export ql_current_lockname="${qln}";
   trap on_ql_trap EXIT;
   trap on_ql_trap 0;
+  trap on_ql_trap SIGHUP;
+  trap on_ql_trap HUP;
 
     #  trap on_ql_trap USR1;
     #  trap on_ql_trap USR2;
