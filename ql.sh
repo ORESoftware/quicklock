@@ -11,7 +11,6 @@ export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
 
-
 mkdir -p "$HOME/.quicklock"
 
 # if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then
@@ -207,6 +206,7 @@ ql_acquire_lock () {
 
   export ql_current_lockname="${qln}";
   trap on_ql_trap EXIT;
+  trap on_ql_trap 0;
 
     #  trap on_ql_trap USR1;
     #  trap on_ql_trap USR2;
