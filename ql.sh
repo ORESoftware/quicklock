@@ -11,8 +11,8 @@ export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
 
-export PATH="$PATH":"$HOME/.quicklock/node_modules/.bin"
-chmod u+x "$HOME/.quicklock/node_modules/.bin/"*
+export PATH="$PATH":"$HOME/.quicklock/nodejs/node_modules/.bin"
+chmod u+x "$HOME/.quicklock/nodejs/node_modules/.bin/"*
 mkdir -p "$HOME/.quicklock/pid_lock_maps"
 
 # if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then

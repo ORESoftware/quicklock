@@ -9,10 +9,10 @@ ql_orange='\033[1;33m'
 ql_green='\033[1;32m'
 ql_no_color='\033[0m'
 
-
 cd "$HOME"
 
 mkdir -p "$HOME/.quicklock/locks"
+mkdir -p "$HOME/.quicklock/nodejs"
 
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
@@ -29,7 +29,7 @@ rm -rf "$cache_location/quicklock" || {
 }
 
 (
-  cd "$HOME/.quicklock" && rm -rf package.json && npm init -f && npm install quicklock@latest
+  cd "$HOME/.quicklock/nodejs" && rm -rf package.json && npm init -f && npm install quicklock@latest
 )
 
 echo "";
