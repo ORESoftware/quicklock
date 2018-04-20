@@ -6,7 +6,7 @@
     "ql_node_release": "lib/ql/release.js",
     "ql_node_release_all": "lib/ql/release-all.js"
   },
-  "version": "0.0.105",
+  "version": "0.0.106",
   "description": "Quick locks for scripts",
   "main": "index.js",
   "scripts": {
