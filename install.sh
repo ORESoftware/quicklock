@@ -29,7 +29,7 @@ rm -rf "$cache_location/quicklock" || {
 }
 
 (
-  cd "$HOME/.quicklock" && npm init -f && npm install quicklock@latest
+  cd "$HOME/.quicklock" && rm -rf package.json && npm init -f && npm install quicklock@latest
 )
 
 echo "";
