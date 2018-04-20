@@ -17,6 +17,10 @@ mkdir -p "$HOME/.quicklock/locks"
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
 
+(
+  cd "$HOME/.quicklock" && npm init -f && npm install quicklock
+)
+
 echo "";
 echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
 echo -e "${ql_cyan} => To complete installation of 'quicklock' add the following line to your .bash_profile file:${ql_no_color}";

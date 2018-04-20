@@ -11,9 +11,7 @@ export ql_green='\033[1;32m'
 export ql_no_color='\033[0m'
 
 
-export PATH="$PATH":"$HOME/.quicklock/node_modules/.bin"
-chmod u+x "$HOME/.quicklock/node_modules/.bin/"*
-mkdir -p "$HOME/.quicklock/pid_lock_maps"
+mkdir -p "$HOME/.quicklock"
 
 # if [[ ! -p "$HOME/.quicklock/ql_named_pipe" ]]; then
 #    mkfifo "$HOME/.quicklock/ql_named_pipe";
@@ -64,10 +62,12 @@ on_ql_trap (){
 
 ql_unlock_process(){
   kill -SIGUSR1 "$1"  #  kill <pid> given by $1, with SIGUSR1 signal...
-    #  kill -SIGUSR2 "$1"
-    #  kill -10 "$1" $ on linux
-    # echo "$1" > "$HOME/.quicklock/ql_named_pipe"
-    #  kill -TERM "$1";
+#  kill -SIGUSR2 "$1"
+
+#  kill -10 "$1" $ on linux
+# echo "$1" > "$HOME/.quicklock/ql_named_pipe"
+
+#  kill -TERM "$1";
 }
 
 
@@ -86,15 +86,11 @@ ql_unlock_process(){
     fi
 
     exit 1;
+
 }
 
 
 ql_ls () {
-   local home="$HOME/.quicklock/locks"
-   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
-}
-
-ql_ls_all () {
    local home="$HOME/.quicklock/locks"
    for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
 }
@@ -146,7 +142,7 @@ ql_get_lockname (){
       return 1;
    fi
 
-   echo "$lockname";
+   echo "$lockname"
 
 }
 
@@ -157,13 +153,14 @@ ql_noop(){
 
 ql_get_lockowner_pid () {
 
-    local lockname="$(ql_get_lockname "$1")";
+    local lockname="$1";
 
     if [[ -z "$lockname" ]]; then
-       return 1;
+      lockname="$(ql_get_lockname)"
     fi
 
 #    local lockname="$(ql_get_lockname "$1" | head -n 1)"
+
     # echo the contents of the directory, should log PID if exists
 
     ls "$lockname" || {
@@ -173,10 +170,7 @@ ql_get_lockowner_pid () {
 }
 
 ql_remove_all_locks (){
-   rm -rf "$HOME/.quicklock/locks";
-   mkdir -p "$HOME/.quicklock/locks";
-   rm -rf "$HOME/.quicklock/pid_lock_maps";
-   mkdir -p "$HOME/.quicklock/pid_lock_maps";
+   rm -rf "$HOME/.quicklock/locks/"*
 }
 
 ql_on_named_pipe_msg (){
@@ -188,6 +182,7 @@ ql_on_named_pipe_msg (){
 
 #     exit 1;
 #     trap - EXIT;
+
 }
 
 ql_acquire_lock () {
@@ -195,13 +190,12 @@ ql_acquire_lock () {
   local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
 
   if [[ -z "$name" ]]; then
-     echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}"
+     echo -e "${ql_magenta}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}"
      name="$PWD";
   fi
 
-  mkdir -p "$HOME/.quicklock/locks";
-
-  fle=$(echo "${name}" | tr "/" _);
+  mkdir -p "$HOME/.quicklock/locks"
+  fle=$(echo "${name}" | tr "/" _)
 
   if [[ "$fle" =~ [^a-zA-Z0-9\-\_] ]]; then
     echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
@@ -209,7 +203,6 @@ ql_acquire_lock () {
     on_ql_conditional_exit
     return 1;
   fi
-
 
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
@@ -220,19 +213,19 @@ ql_acquire_lock () {
     return 1;
   }
 
-
-  # use node.js process to register lockname with this pid
-  ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
-
   my_named_pipe="${qln}/$$"
   mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
 
-  trap on_ql_trap EXIT HUP QUIT TERM;
+  export ql_current_lockname="${qln}";
+
+  echo "about to set trap"
+  trap on_ql_trap EXIT HUP INT QUIT TERM;
 
 
-    #  trap on_ql_trap 0;
-    #  trap on_ql_trap SIGHUP;
-    #  trap on_ql_trap HUP;
+#  trap on_ql_trap 0;
+#  trap on_ql_trap SIGHUP;
+#  trap on_ql_trap HUP;
+
     #  trap on_ql_trap USR1;
     #  trap on_ql_trap USR2;
     #  trap on_ql_trap SIGUSR1;
@@ -242,7 +235,7 @@ ql_acquire_lock () {
 
 
   echo -e "${ql_gray}quicklock: process id requesting lock: $$, parent process id: $(ps -o ppid= -p $$)${ql_no_color}."
-  echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
+  echo -e "${ql_green}quicklock: acquired lock with path '${qln}'${ql_no_color}"
 
   if [[ "$ql_allow_ipc" == "yes" ]]; then
 
@@ -288,7 +281,7 @@ ql_release_lock () {
 
     ql_get_next_int > "$HOME/.quicklock/release.call.count.json"
 
-    local quicklock_name="";
+    local quicklock_name="$ql_current_lockname";
     local is_force="nope";
 
     local last="$(echo ${@: -1})"
@@ -300,12 +293,10 @@ ql_release_lock () {
    if [[ ! -z "$1" && "$1" != "--force" ]]; then
         quicklock_name="${1}";
 
-    elif [[ -z "${quicklock_name}" ]]; then
-        echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}";
+   elif [[ -z "${quicklock_name}" ]]; then
+        echo -e "${ql_magenta}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}";
         quicklock_name="$PWD";
    fi
-
-   local ql_full_lock_path="$quicklock_name";
 
    if [[ "$quicklock_name" != "$HOME/.quicklock/locks/"* ]]; then
 
@@ -318,7 +309,7 @@ ql_release_lock () {
         return 1;
       fi
 
-       ql_full_lock_path="$HOME/.quicklock/locks/${quicklock_name}.lock";
+       quicklock_name="$HOME/.quicklock/locks/${quicklock_name}.lock";
    fi
 
    if [[ -z "${quicklock_name}" ]]; then
@@ -334,8 +325,8 @@ ql_release_lock () {
    fi
 
    local current_pid="$$"
-    # local pid_inside="$(ls "${quicklock_name}" | head -n 1)";
-   local pid_inside="$(ls "${ql_full_lock_path}" 2> /dev/null)";
+#   local pid_inside="$(ls "${quicklock_name}" | head -n 1)";
+   local pid_inside="$(ls "${quicklock_name}" 2> /dev/null)";
 
 
    if [[ "${is_force}" != "yes" && ! -z "${pid_inside}" ]]; then
@@ -345,18 +336,13 @@ ql_release_lock () {
      fi
    fi
 
-   if [[ -z "$pid_inside" ]]; then
-      pid_inside="$$";
-   fi
 
-   ql_pid="$pid_inside" ql_lock_name="$quicklock_name" ql_full_lock_path="$ql_full_lock_path" ql_node_release;
-
-   rm -r "${ql_full_lock_path}" &> /dev/null && {
+   rm -r "${quicklock_name}" &> /dev/null && {
         echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";
         ql_get_next_int > "$HOME/.quicklock/release.count.json";
    } ||
    {
-        >&2 echo -e "${ql_magenta}quicklock: no lock existed for lock '${ql_full_lock_path}'.${ql_no_color}"; ql_maybe_fail;
+        >&2 echo -e "${ql_magenta}quicklock: no lock existed for lockname '${quicklock_name}'.${ql_no_color}"; ql_maybe_fail;
    };
 
 #   export ql_no_more_trap="yes";
