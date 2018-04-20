@@ -7,7 +7,7 @@ import fs = require('fs');
 const pid = process.env.ql_pid;
 const lockname = process.env.ql_lock_name;
 const fullLockPath = process.env.ql_full_lock_path;
-
+const keepLockAfterExit = process.env.ql_keep === "yes";
 
 if(!pid){
   throw new Error('No pid passed via env var ("ql_pid").');
@@ -40,7 +40,7 @@ locks[lockname] = {
   timestamp: stamp,
   fullLockPath: fullLockPath,
   lockname: lockname,
-  deleteOnExit: true
+  deleteOnExit: keepLockAfterExit !== true
 };
 
 fs.writeFileSync(file, JSON.stringify(locks));

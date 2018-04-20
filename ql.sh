@@ -62,6 +62,10 @@ on_ql_trap (){
    ql_release_lock
 }
 
+ql_ps(){
+  echo -e "${ql_gray}quicklock: current process id: $$, parent process id: $(ps -o ppid= -p $$)${ql_no_color}."
+}
+
 ql_unlock_process(){
   kill -SIGUSR1 "$1"  #  kill <pid> given by $1, with SIGUSR1 signal...
     #  kill -SIGUSR2 "$1"
@@ -211,7 +215,8 @@ ql_on_named_pipe_msg (){
 
 ql_acquire_lock () {
 
-  local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
+   my_array=( "$@" );
+   local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
 
   if [[ -z "$name" ]]; then
      echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}"
@@ -232,16 +237,25 @@ ql_acquire_lock () {
 
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
-  mkdir "${qln}" &> /dev/null || {
+   mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}";
-    echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
+
+    local pid_inside="$(ls "${qln}" 2> /dev/null)";
+
+    if [[ "$pid_inside" == "$$" ]]; then
+        echo -e "${ql_magenta}quicklock: this process already owns the desired lock.${ql_no_color}";
+    else
+        echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
+    fi
+
     on_ql_conditional_exit;
     return 1;
   }
 
+  ql_keep=$(ql_match_arg "--keep" "${my_array[@]}" && echo "yes")
 
   # use node.js process to register lockname with this pid
-  ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
+  ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
 
   my_named_pipe="${qln}/$$"
   mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
@@ -259,8 +273,6 @@ ql_acquire_lock () {
     #  trap on_ql_trap SIGHUP;
     #  trap on_ql_trap HUP;
 
-
-  echo -e "${ql_gray}quicklock: process id requesting lock: $$, parent process id: $(ps -o ppid= -p $$)${ql_no_color}."
   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
 
   if [[ "$ql_allow_ipc" == "yes" ]]; then
@@ -435,6 +447,7 @@ export -f ql_get_lockname;
 export -f ql_write_message;
 export -f ql_noop;
 export -f ql_match_arg;
+export -f ql_ps;
 
 # that's it lulz
 
