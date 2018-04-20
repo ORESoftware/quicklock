@@ -17,7 +17,7 @@ mkdir -p "$HOME/.quicklock/locks"
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
 
-npm cache clean;
+npm cache clean --force;
 
 (
   cd "$HOME/.quicklock" && npm init -f && npm install quicklock@latest
