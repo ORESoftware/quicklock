@@ -4,7 +4,8 @@
     "quicklock": "lib/index.js",
     "ql_node_acquire": "lib/ql/acquire.js",
     "ql_node_release": "lib/ql/release.js",
-    "ql_node_release_all": "lib/ql/release-all.js"
+    "ql_node_release_all": "lib/ql/release-all.js",
+    "ql_node_ls_all": "lib/ql/ls.js"
   },
   "version": "0.0.107",
   "description": "Quick locks for scripts",

@@ -33,9 +33,14 @@ if(locks[lockname]){
   throw new Error(`Lockname with name "${lockname}" is already being used, by pid "${pid}."`);
 }
 
+const stamp = Date.now();
+
 locks[lockname] = {
-  date: new Date().toISOString(),
-  fullLockPath: fullLockPath
+  date: new Date(stamp).toISOString(),
+  timestamp: stamp,
+  fullLockPath: fullLockPath,
+  lockname: lockname,
+  deleteOnExit: true
 };
 
 fs.writeFileSync(file, JSON.stringify(locks));

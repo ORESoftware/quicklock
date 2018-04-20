@@ -90,8 +90,7 @@ ql_unlock_process(){
 
 
 ql_ls () {
-   local home="$HOME/.quicklock/locks"
-   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
+   ql_pid="$$" ql_node_ls_all
 }
 
 ql_ls_all () {
