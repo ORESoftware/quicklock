@@ -7,20 +7,26 @@ import {createParser, eventName, writeToStream} from './json-parser';
 import fs = require('fs');
 import path = require('path');
 import cp = require('child_process');
-import Socket = NodeJS.Socket;
 import {Socket} from "net";
 
 const dir = path.resolve(process.env.HOME + '/.quicklock');
 const portFile = path.resolve(process.env.HOME + '/.quicklock/server-port.json');
 
+export interface QuicklockSocket extends Socket {
+  ql_pid?: number
+}
 
-
-const s = net.createServer(function (socket) {
+const s = net.createServer(function (socket: QuicklockSocket) {
   
   console.log('new connection:', socket.localAddress, socket.address());
   
-  socket.pipe(createParser())
+  socket.on('data', function (d) {
+      console.log('raw data from socket:', String(d));
+  })
+  .pipe(createParser())
   .on(eventName, function (v: any) {
+  
+    socket.write('received\n');
     
     if (!v) {
       console.error('Parsed JSON is not an object.');
@@ -39,7 +45,7 @@ const s = net.createServer(function (socket) {
       return;
     }
     
-    if (v.releaseLock === true && Number.isInteger(v.lockHolderPID)) {
+    if (v.isRequest === true && v.releaseLock === true && Number.isInteger(v.lockHolderPID)) {
       
       let s;
       if (s = map.get(v.lockHolderPID)) {
@@ -48,6 +54,11 @@ const s = net.createServer(function (socket) {
       else {
         console.error('no socket connection with pid:', v.lockHolderPID);
       }
+    }
+    
+    if(v.isResponse === true && v.releaseLock === true){
+      socket.write('released\n');
+      return;
     }
     
     console.error('Switch fallthrough:', JSON.stringify(v));
