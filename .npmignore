@@ -1,5 +1,5 @@
 *.json
-*.sh
+scripts
 *.ts
 .idea
 node_modules
