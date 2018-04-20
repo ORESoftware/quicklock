@@ -97,6 +97,7 @@ ql_match_arg(){
     shift;
         for var in "$@"; do
             if [[ "$var" == "$first_item" ]]; then
+              echo "yes";
               return 0;
             fi
         done
@@ -106,14 +107,14 @@ ql_match_arg(){
 
 ql_ls () {
    my_array=( "$@" );
-   ql_all=$(ql_match_arg "-a" "${my_array[@]}" && echo "yes")
+   ql_all=$(ql_match_arg "-a" "${my_array[@]}")
 
    if [[ "$ql_all" == "yes" ]]; then
       ql_ls_all $@
       return 0;
    fi
 
-   ql_json=$(ql_match_arg "--json" "${my_array[@]}" && echo "yes")
+   ql_json=$(ql_match_arg "--json" "${my_array[@]}")
    ql_pid="$$" ql_json="$ql_json" ql_node_ls_all
 }
 
@@ -208,9 +209,6 @@ ql_on_named_pipe_msg (){
   local ql_msg="$1";
   echo -e "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}"
   ql_release_lock
-
-#     exit 1;
-#     trap - EXIT;
 }
 
 ql_acquire_lock () {
@@ -238,21 +236,22 @@ ql_acquire_lock () {
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
    mkdir "${qln}" &> /dev/null || {
-    echo -e "${ql_magenta}quicklock: could not acquire lock with name '${qln}'${ql_no_color}";
+    echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with name '${qln}'${ql_no_color}";
 
     local pid_inside="$(ls "${qln}" 2> /dev/null)";
 
     if [[ "$pid_inside" == "$$" ]]; then
         echo -e "${ql_magenta}quicklock: this process already owns the desired lock.${ql_no_color}";
     else
-        echo -e "${ql_magenta}quicklock: someone else is using that lockname.${ql_no_color}";
+        echo -e "${ql_magenta}quicklock: someone else is using that lockname (pid=$pid_inside).${ql_no_color}";
+        echo -e "${ql_magenta}quicklock: to ask them to release the lock use 'ql_ask_release $pid_inside').${ql_no_color}";
     fi
 
     on_ql_conditional_exit;
     return 1;
   }
 
-  ql_keep=$(ql_match_arg "--keep" "${my_array[@]}" && echo "yes")
+  ql_keep=$(ql_match_arg "--keep" "${my_array[@]}")
 
   # use node.js process to register lockname with this pid
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
@@ -285,7 +284,7 @@ ql_acquire_lock () {
 }
 
 
- ql_maybe_fail () {
+ql_maybe_fail () {
 
   if [[ "$ql_fail_fast" == "yes" || "$ql_fast_fail" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: exiting with 1 since fail flag was set for your 'ql_release_lock' command.${ql_no_color}"
@@ -319,13 +318,12 @@ ql_release_lock () {
 
     ql_get_next_int > "$HOME/.quicklock/release.call.count.json"
 
+    my_array=( "$@" );
     local quicklock_name="";
-    local is_force="nope";
+    local is_force=$(ql_match_arg "--force" "${my_array[@]}")
 
-    local last="$(echo ${@: -1})"
-    if [[ "${last}" == "--force" ]]; then
+    if [[ "${is_force}" == "yes" ]]; then
       echo -e "${ql_magenta}quicklock: warning using --force.${ql_no_color}";
-      is_force="yes"
     fi
 
    if [[ ! -z "$1" && "$1" != "--force" ]]; then
@@ -416,7 +414,7 @@ ql_add_colors(){
 }
 
 ql_release_all_locks(){
-  // this is just an alias
+  # this is just an alias
   ql_remove_all_locks
 }
 
