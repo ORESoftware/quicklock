@@ -272,15 +272,72 @@ ql_acquire_lock () {
     #  trap on_ql_trap SIGHUP;
     #  trap on_ql_trap HUP;
 
-  echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}"
+   echo "foo bar baz wtf";
+   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
+   if  ql_connect; then
+      echo "ql was able to connect to tcp server.";
+#      ql_node_receiver <&3 | ql_conditional_release &
+   else
+       echo "ql was NOT able to connect to tcp server.";
+   fi
 
-  if [[ "$ql_allow_ipc" == "yes" ]]; then
+#  echo "";
 
-    echo -e "quicklock: process is reading from named pipe to listen for incoming messages regarding releasing lock.";
-    while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
+#  if [[ "$ql_allow_ipc" == "yes" ]]; then
+#
+#    echo -e "quicklock: process is reading from named pipe to listen for incoming messages regarding releasing lock.";
+#    while read line; do ql_on_named_pipe_msg "$line" "$$"; done < ${my_named_pipe} &
+#
+#  fi
 
-  fi
+}
 
+
+ql_ask_release(){
+
+   local pid="$1"
+
+   if [[ -z "$pid" ]]; then
+      echo "need to pass pid as first argument.";
+      return 1;
+   fi
+
+
+
+}
+
+
+ql_connect(){
+   port_file="$HOME/.quicklock/server-port.json"
+
+   my_str=$(cat "$port_file");
+   typeset -i my_num="${my_str:-"1"}"
+
+#   echo "quicklock: server port: $my_num\n";
+
+    BASH_PID="$$"
+    ARGS=""; for i; do ARGS=$(printf '%s"%s"' "$ARGS", "$i"); done;
+    ARGS=${ARGS#,}
+
+    exec 3<>"/dev/tcp/localhost/$my_num"  # persistent file descriptor
+
+    exit_code=$?
+
+    if [[ ${exit_code} -ne 0 ]]; then
+      echo "quicklock: could not connect.";
+      return 1;
+    fi
+
+    echo "{\"init\":true,\"quicklock\":true,\"pid\":${BASH_PID},\"args\":[${ARGS}],\"cwd\":\"$(pwd)\"}"  >&3
+    echo "" >&3
+    echo "returning from routine...";
+    return 0;
+}
+
+
+ql_conditional_release(){
+#   while read line; do ql_release_lock "$line"; done;
+   while read line; do echo "go stdin: $line"; done &
 }
 
 

@@ -1,5 +1,8 @@
 
 
+
+https://unix.stackexchange.com/questions/269805/how-can-i-detach-a-process-from-a-bash-script
+
 https://github.com/nodejs/help/issues/1132
 
 https://stackoverflow.com/questions/1058047/wait-for-any-process-to-finish/39231660#39231660
