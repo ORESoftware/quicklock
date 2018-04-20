@@ -9,7 +9,7 @@
     "ql_node_server": "lib/ql/server.js",
     "ql_node_receiver": "lib/ql/receiver.js"
   },
-  "version": "0.0.108",
+  "version": "0.0.109",
   "description": "Quick locks for scripts",
   "main": "index.js",
   "scripts": {
