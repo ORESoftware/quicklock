@@ -17,8 +17,14 @@ mkdir -p "$HOME/.quicklock/locks"
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
 
+cache_location="$(npm config get cache)";
+
+if [[ -z "$cache_location" ]]; then
+  cache_location="$HOME/.npm"
+fi
+
 # clean the cache.... previously: npm cache clean --force;
-rm -rf "$HOME/.npm/quicklock" || {
+rm -rf "$cache_location/quicklock" || {
   echo "no quicklock package in npm cache dir.";
 }
 
