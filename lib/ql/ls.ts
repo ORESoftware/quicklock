@@ -3,7 +3,10 @@
 
 import path = require('path');
 import fs = require('fs');
+
+import chalk from 'chalk';
 const pid = process.env.ql_pid;
+const useJSON = process.env.ql_json === "yes";
 
 if (!pid) {
   throw new Error('No pid passed via env var ("ql_pid").');
@@ -21,5 +24,10 @@ catch (err) {
 const locks = require(file);
 
 Object.keys(locks).forEach(function(k){
-  console.log(JSON.stringify(locks[k]));
+  if(useJSON){
+    console.log(JSON.stringify(locks[k]));
+  }
+  else{
+    console.log(chalk.cyan(locks[k].fullLockPath));
+  }
 });

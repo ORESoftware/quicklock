@@ -34,5 +34,8 @@
   "devDependencies": {
     "@types/core-js": "^0.9.46",
     "@types/node": "^9.4.6"
+  },
+  "dependencies": {
+    "chalk": "^2.4.0"
   }
 }

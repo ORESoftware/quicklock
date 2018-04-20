@@ -88,9 +88,29 @@ ql_unlock_process(){
     exit 1;
 }
 
+ql_match_arg(){
+    first_item="$1";
+    shift;
+        for var in "$@"; do
+            if [[ "$var" == "$first_item" ]]; then
+              return 0;
+            fi
+        done
+    return 1;
+}
+
 
 ql_ls () {
-   ql_pid="$$" ql_node_ls_all
+   my_array=( "$@" );
+   ql_all=$(ql_match_arg "-a" "${my_array[@]}" && echo "yes")
+
+   if [[ "$ql_all" == "yes" ]]; then
+      ql_ls_all $@
+      return 0;
+   fi
+
+   ql_json=$(ql_match_arg "--json" "${my_array[@]}" && echo "yes")
+   ql_pid="$$" ql_json="$ql_json" ql_node_ls_all
 }
 
 ql_ls_all () {
@@ -414,6 +434,7 @@ export -f ql_echo_current_lockname;
 export -f ql_get_lockname;
 export -f ql_write_message;
 export -f ql_noop;
+export -f ql_match_arg;
 
 # that's it lulz
 
