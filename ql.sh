@@ -19,6 +19,7 @@ mkdir -p "$HOME/.quicklock/pid_lock_maps"
 #    mkfifo "$HOME/.quicklock/ql_named_pipe";
 # fi
 
+
 ql_uninstall(){
     rm -rf "$HOME/.quicklock"
 }
@@ -112,6 +113,45 @@ ql_match_arg(){
         done
     return 1;
 }
+
+
+ql_join_arry_to_json(){
+      arr=( "$@" );
+      len=${#arr[@]}
+
+      if [[ ${len} -eq 0 ]]; then
+        >&2 echo "Error: Length of input array needs to be at least 2.";
+         return 1;
+      fi
+
+      if [[ $((len%2)) -eq 1 ]]; then
+         >&2 echo "Error: Length of input array needs to be even (key/value pairs).";
+         return 1;
+      fi
+
+      data="";
+      foo=0;
+      for i in "${arr[@]}"; do
+          char=","
+          if [ $((++foo%2)) -eq 0 ]; then
+               char=":";
+          fi
+
+          first="${i:0:1}";  # read first charc
+
+          app="\"$i\""
+
+          if [[ "$first" == "^" ]]; then
+            app="${i:1}"  # remove first char
+          fi
+
+          data="$data$char$app"
+
+      done
+
+      data="${data:1}"  # remove first char
+      echo "{$data}"    # add braces around the string
+  }
 
 
 ql_ls () {
@@ -343,7 +383,9 @@ ql_ask_release(){
 #     rm -rf ${named_pipe};
 #     mkfifo ${named_pipe};
 
-     ql_node_value="{\"quicklock\":true}" ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
+     json=$(ql_join_arry_to_json quicklock ^true)
+
+     ql_node_value="$json" ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
          echo "response from server: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
@@ -573,6 +615,7 @@ export -f ql_write_message;
 export -f ql_noop;
 export -f ql_match_arg;
 export -f ql_ps;
+export -f ql_join_arry_to_json;
 
 # that's it lulz
 

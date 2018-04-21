@@ -226,6 +226,39 @@ ql_acquire_lock () {
   trap on_ql_trap EXIT HUP INT QUIT TERM;
 
 
+  ql_join_arry_to_json(){
+      arr=( "$@" );
+      len=${#arr[@]}
+
+      if [[ ${len} -eq 0 ]]; then
+        >&2 echo "Error: Length of input array needs to be at least 2.";
+         return 1;
+      fi
+
+      if [[ $((len%2)) -eq 1 ]]; then
+         >&2 echo "Error: Length of input array needs to be even (key/value pairs).";
+         return 1;
+      fi
+
+      data="";
+      foo=0;
+      for i in "${arr[@]}"; do
+          char=","
+          if [ $((++foo%2)) -eq 0 ]; then
+               char=":";
+          fi
+
+          app="\"$i\""
+
+          data="$data$char$app"
+
+      done
+
+      data="${data:1}"  # remove first char
+      echo "{$data}"    # add braces around the string
+  }
+
+
 #  trap on_ql_trap 0;
 #  trap on_ql_trap SIGHUP;
 #  trap on_ql_trap HUP;
