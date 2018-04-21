@@ -420,7 +420,14 @@ ql_acquire_lock () {
 
         echo "foooo" > "$HOME/.quicklock/debug.log";
 #        tail -f ${my_named_pipe} | ql_conditional_release &> "$HOME/.quicklock/debug.log" & disown # &> "$HOME/.quicklock/debug.log";
-      ( tail -f ${my_named_pipe} | nc localhost ${ql_server_port} | ql_node_receiver | ql_conditional_release &> "$HOME/.quicklock/debug.log" & disown; ) &> /dev/null
+      (
+         # here we write/read to the tcp connection via the named pipe
+         tail -f ${my_named_pipe} |
+         nc localhost ${ql_server_port} |
+         ql_node_receiver |
+         ql_conditional_release &> "$HOME/.quicklock/debug.log" | ${my_named_pipe} & disown;
+      ) &> /dev/null
+
    else
        echo "ql was NOT able to connect to tcp server.";
    fi
