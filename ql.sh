@@ -265,7 +265,7 @@ ql_acquire_lock () {
   # use node.js process to register lockname with this pid
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
 
-  my_named_pipe="${qln}/$$"
+  export my_named_pipe="${qln}/$$"
   mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
 
   trap on_ql_trap EXIT HUP QUIT TERM;
@@ -284,7 +284,7 @@ ql_acquire_lock () {
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
    if  ql_connect; then
       echo "ql was able to connect to tcp server";
-      ql_node_receiver <&3 | ql_conditional_release & disown;
+      nc localhost ${ql_server_port} | ql_node_receiver | ql_conditional_release & disown;
    else
        echo "ql was NOT able to connect to tcp server.";
    fi
@@ -327,21 +327,35 @@ ql_ask_release(){
 #     local response="$(timeout 45 cat <&3)"
 #     local response="$(cat <&3)"
 
-#     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}" &>3;
-#     echo "" &>3;
+#     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}" > nc localhost ${ql_server_port};
+#     echo "" > nc localhost ${ql_server_port};
 
 #      nc localhost ${ql_server_port}
 
      echo "about to echo stuff 1";
 
-     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}" | nc localhost ${ql_server_port} | while read response; do
+#     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}"
+
+#     my_named_pipe
+
+     mkdir -p "$HOME/.quicklock/named_pipes"
+     local named_pipe="$HOME/.quicklock/named_pipes/$$";
+     rm -rf ${named_pipe};
+     mkfifo ${named_pipe};
+
+      tail -f ${named_pipe} | nc localhost "${ql_server_port}" | while read response; do
          echo "response from server: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
-            return 0;
+#            return 0;
          fi
-      done;
+      done &
    fi
+
+
+     echo -e "{\"quicklock\":true}\n" > ${named_pipe}
+     wait;
+
 
      echo "about to echo stuff 2";
 
@@ -353,14 +367,19 @@ ql_ask_release(){
 
 ql_connect(){
 
-   if [[ "$ql_is_connected" == "yes" ]]; then
-      return 0;
-   fi
-
    port_file="$HOME/.quicklock/server-port.json"
 
    my_str=$(cat "$port_file");
    typeset -i my_num="${my_str:-"1"}"
+
+#    nc -zv localhost ${my_num}  > /dev/null 2>&1
+#    nc_exit="$?"
+#
+#    if [ ! "${nc_exit}" -eq "0" ]; then
+#         >&2  echo "quicklock: could not connect.";
+#         return 1;
+#    fi
+
 
 #   echo "quicklock: server port: $my_num\n";
 
@@ -368,20 +387,19 @@ ql_connect(){
     ARGS=""; for i; do ARGS=$(printf '%s"%s"' "$ARGS", "$i"); done;
     ARGS=${ARGS#,}
 
-    exec 3<>"/dev/tcp/localhost/$my_num"  # persistent file descriptor
+#    exec 3<>"/dev/tcp/localhost/$my_num"  # persistent file descriptor
+#
+#    exit_code=$?
+#
+#    if [[ ${exit_code} -ne 0 ]]; then
+#      >&2  echo "quicklock: could not connect.";
+#      return 1;
+#    fi
 
-    exit_code=$?
-
-    if [[ ${exit_code} -ne 0 ]]; then
-      >&2  echo "quicklock: could not connect.";
-      return 1;
-    fi
-
-    export ql_is_connected="yes"
     export ql_server_port=${my_num};
 
-    echo "{\"init\":true,\"quicklock\":true,\"pid\":${BASH_PID},\"args\":[${ARGS}],\"cwd\":\"$(pwd)\"}"  >&3
-    echo "" >&3
+    echo "{\"init\":true,\"quicklock\":true,\"pid\":${BASH_PID},\"args\":[${ARGS}],\"cwd\":\"$(pwd)\"}"  > nc localhost ${my_num}
+    echo "" > nc localhost ${my_num}
     echo "quicklock: made new connection to tcp server on port $my_num."
     return 0;
 }

@@ -22,11 +22,12 @@ const s = net.createServer(function (socket: QuicklockSocket) {
   
   socket.on('data', function (d) {
       console.log('raw data from socket:', String(d));
+      socket.write('received_data\n');
   })
   .pipe(createParser())
   .on(eventName, function (v: any) {
   
-    socket.write('received\n');
+    socket.write('received_json\n');
     
     if (!v) {
       console.error('Parsed JSON is not an object.');
