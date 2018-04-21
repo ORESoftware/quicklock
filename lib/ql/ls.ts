@@ -23,11 +23,11 @@ catch (err) {
 
 const locks = require(file);
 
-Object.keys(locks).forEach(function(k){
-  if(useJSON){
+Object.keys(locks).forEach(function (k) {
+  if (useJSON) {
     console.log(JSON.stringify(locks[k]));
   }
-  else{
+  else {
     console.log(chalk.cyan(locks[k].fullLockPath));
   }
 });

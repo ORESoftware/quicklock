@@ -26,12 +26,12 @@ const s = net.createServer(function (socket: QuicklockSocket) {
   console.log('new connection:', socket.localAddress, socket.address());
   
   socket.on('data', function (d) {
-      console.log('raw data from socket:', String(d));
-      socket.write('received_data\n');
+    console.log('raw data from socket:', String(d));
+    socket.write('received_data\n');
   })
   .pipe(createParser())
   .on(eventName, function (v: any) {
-  
+    
     socket.write('received_json\n');
     
     if (!v) {
@@ -62,7 +62,7 @@ const s = net.createServer(function (socket: QuicklockSocket) {
       }
     }
     
-    if(v.isResponse === true && v.releaseLock === true){
+    if (v.isResponse === true && v.releaseLock === true) {
       socket.write('released\n');
       return;
     }

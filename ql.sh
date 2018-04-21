@@ -101,7 +101,13 @@ on_ql_trap (){
    echo "";
    echo "quicklock: process with pid '$$' caught/trapped a signal.";
 #   echo "quicklock: signal trapped: '$1'."
-   ql_release_lock
+
+   ql_pid="$$" ql_node_release_all
+
+#   ql_pid="$$" ql_node_release_all | while read lock; do
+#     ql_release_lock "${lock}"
+#   done;
+
 }
 
 ql_ps(){
@@ -375,8 +381,8 @@ ql_acquire_lock () {
     #  trap on_ql_trap HUP;
 
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
+
    if  ql_connect; then
-      echo "ql was able to connect to tcp server";
       nc localhost ${ql_server_port} | ql_node_receiver | ql_conditional_release & disown;
    else
        echo "ql was NOT able to connect to tcp server.";
@@ -642,6 +648,9 @@ export -f ql_join_arry_to_json;
 export -f ql_connect;
 export -f ql_source_latest;
 export -f ql_kill_node_server;
+export -f ql_conditional_release;
+export -f ql_get_server_port;
+
 
 # that's it lulz
 

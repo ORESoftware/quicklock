@@ -9,27 +9,26 @@ const lockname = process.env.ql_lock_name;
 const fullLockPath = process.env.ql_full_lock_path;
 const keepLockAfterExit = process.env.ql_keep === "yes";
 
-if(!pid){
+if (!pid) {
   throw new Error('No pid passed via env var ("ql_pid").');
 }
 
-if(!lockname){
+if (!lockname) {
   throw new Error('No lockname passed via env var ("ql_lock_name").');
 }
 
 const file = path.resolve(process.env.HOME + '/.quicklock/pid_lock_maps/' + pid + '.json');
 
-try{
-  fs.writeFileSync(file, '{}', {flag:'wx'});
+try {
+  fs.writeFileSync(file, '{}', {flag: 'wx'});
 }
-catch(err){
-   // ignore
+catch (err) {
+  // ignore
 }
-
 
 const locks = require(file);
 
-if(locks[lockname]){
+if (locks[lockname]) {
   throw new Error(`Lockname with name "${lockname}" is already being used, by pid "${pid}."`);
 }
 

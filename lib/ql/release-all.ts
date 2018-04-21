@@ -3,39 +3,44 @@
 
 import path = require('path');
 import fs = require('fs');
+import cp = require('child_process');
 
 const pid = process.env.ql_pid;
-const lockname = process.env.ql_lock_name;
 const isForce = process.env.ql_force === 'yes';
 
-
-if(!pid){
+if (!pid) {
   throw new Error('No pid passed via env var ("ql_pid").');
-}
-
-if(!lockname){
-  throw new Error('No lockname passed via env var ("ql_lock_name").');
 }
 
 const file = path.resolve(process.env.HOME + '/.quicklock/pid_lock_maps/' + pid + '.json');
 
-try{
-  fs.writeFileSync(file, '{}', {flag:'wx'});
+try {
+  // create file if it doesn't exist
+  fs.writeFileSync(file, '{}', {flag: 'wx'});
 }
-catch(err){
+catch (err) {
   // ignore
 }
 
 const locks = require(file);
+const copy = {} as any;
 
-Object.keys(locks).forEach(function(k){
+Object.keys(locks).forEach(function (k) {
   const lock = locks[k];
-  try{
-    if(isForce === true || lock.deleteOnExit === true){
-      fs.unlinkSync(lock['fullLockPath']);
+  try {
+    if (isForce === true || lock.deleteOnExit === true) {
+      const name = lock['fullLockPath'];
+      console.log(name);
+      cp.execSync(`rm -rf ${name};`);
+    }
+    else {
+      // keep these keys
+      copy[k] = locks[k];
     }
   }
-  catch(err){
+  catch (err) {
     console.error(err);
   }
 });
+
+fs.writeFileSync(file, JSON.stringify(copy), {flag: 'w'});

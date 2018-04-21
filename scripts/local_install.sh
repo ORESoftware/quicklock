@@ -2,6 +2,8 @@
 
 set -e;
 
+
+mkdir -p "$HOME/.quicklock";
 cat ql.sh > "$HOME/.quicklock/ql.sh";
 source "$HOME/.quicklock/ql.sh";
 
