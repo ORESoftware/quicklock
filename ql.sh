@@ -377,7 +377,7 @@ ql_acquire_lock () {
   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
    mkdir "${qln}" &> /dev/null || {
-    echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with name '${qln}'${ql_no_color}";
+    echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with path '${qln}'${ql_no_color}";
 
     local pid_inside="$(ls "${qln}" 2> /dev/null)";
 
@@ -385,7 +385,7 @@ ql_acquire_lock () {
         echo -e "${ql_magenta}quicklock: this process already owns the desired lock.${ql_no_color}";
     else
         echo -e "${ql_magenta}quicklock: someone else is using that lockname (pid=$pid_inside).${ql_no_color}";
-        echo -e "${ql_magenta}quicklock: to ask them to release the lock use 'ql_ask_release $pid_inside').${ql_no_color}";
+        echo -e "${ql_magenta}quicklock: to ask them to release the lock use 'ql_ask_release $pid_inside $name').${ql_no_color}";
     fi
 
     on_ql_conditional_exit;
