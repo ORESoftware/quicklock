@@ -13,7 +13,7 @@ const dir = path.resolve(process.env.HOME + '/.quicklock');
 const portFile = path.resolve(process.env.HOME + '/.quicklock/server-port.json');
 
 export interface QuicklockSocket extends Socket {
-  ql_pid?: number
+  ql_pid?: string
 }
 
 process.once('exit', function () {
@@ -40,25 +40,40 @@ const s = net.createServer(function (socket: QuicklockSocket) {
     }
     
     if (v.init === true) {
-      if (!Number.isInteger(v.pid)) {
-        console.error('"pid" property is not an integer.');
+      
+      if (!v.pid) {
+        console.error('"pid" property is not defined.');
         return;
       }
       
-      console.error('setting pid');
-      socket.ql_pid = v.pid;
-      v.pid && map.set(v.pid, socket);
+      socket.write(`received init request!\n`);
+      
+      const pidString = String(v.pid);
+      console.error('setting pid:', pidString);
+      socket.ql_pid = pidString;
+      v.pid && map.set(pidString, socket);
       return;
     }
     
-    if (v.isRequest === true && v.releaseLock === true && Number.isInteger(v.lockHolderPID)) {
+    if (v.isRequest === true && v.releaseLock === true && v.lockHolderPID) {
+      
+      let keys = Array.from(map.keys());
+      
+      keys.forEach(function (k) {
+        console.log('here is a lockholder pid:', k);
+      });
+      
+      socket.write(`received release request!\n`);
       
       let s;
-      if (s = map.get(v.lockHolderPID)) {
+      if (s = map.get(String(v.lockHolderPID))) {
+        socket.write(`found socket lock holder for release request!\n`);
         writeToStream(s, {releaseLock: true, lockName: v.lockName, isResponse: true});
       }
       else {
+        socket.write(`no socket connection with pid! ${v.lockHolderPID}\n`);
         console.error('no socket connection with pid:', v.lockHolderPID);
+        return;
       }
     }
     
@@ -67,6 +82,7 @@ const s = net.createServer(function (socket: QuicklockSocket) {
       return;
     }
     
+    // Switch fallthrough: {"quicklock":true,"releaseLock":true,"lockName":"a","isRequest":true,"lockHolderPID":"9190"}
     console.error('Switch fallthrough:', JSON.stringify(v));
     
   })

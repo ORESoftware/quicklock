@@ -19,6 +19,14 @@ mkdir -p "$HOME/.quicklock/pid_lock_maps"
 #    mkfifo "$HOME/.quicklock/ql_named_pipe";
 # fi
 
+ql_tail_server_log(){
+    tail -f "$HOME/.quicklock/server.log"
+}
+
+ql_tail_debug_log(){
+    tail -f "$HOME/.quicklock/server.log"
+}
+
 ql_get_server_port(){
  local port_file="$HOME/.quicklock/server-port.json"
  local my_str=$(cat "$port_file");
@@ -419,7 +427,7 @@ ql_acquire_lock () {
 
        local pid="$$";
       local json=`cat <<EOF
- "{"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}"
+ {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
 EOF`
 
    echo "$json" > ${my_named_pipe};
@@ -668,6 +676,8 @@ export -f ql_kill_node_server;
 export -f ql_conditional_release;
 export -f ql_get_server_port;
 export -f ql_conditional_start_server;
+export -f ql_tail_server_log;
+export -f ql_tail_debug_log;
 
 
 # that's it lulz
