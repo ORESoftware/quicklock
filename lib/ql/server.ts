@@ -16,6 +16,11 @@ export interface QuicklockSocket extends Socket {
   ql_pid?: number
 }
 
+process.once('exit', function () {
+  // clear out the file
+  fs.writeFileSync(portFile, '', {encoding: 'utf8', flag: 'w'});
+});
+
 const s = net.createServer(function (socket: QuicklockSocket) {
   
   console.log('new connection:', socket.localAddress, socket.address());

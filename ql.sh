@@ -19,12 +19,38 @@ mkdir -p "$HOME/.quicklock/pid_lock_maps"
 #    mkfifo "$HOME/.quicklock/ql_named_pipe";
 # fi
 
+ql_get_server_port(){
+ local port_file="$HOME/.quicklock/server-port.json"
+ local my_str=$(cat "$port_file");
+ echo "${my_str:-""}"
+}
+
+
 
 which_nodejs="$(which node)";
 if [[ -z "$which_nodejs" ]]; then
     echo "quicklock depends on nodejs, and the 'node' executable."
     echo "quicklock recommends using NVM: https://github.com/creationix/nvm"
 fi
+
+# start the nodejs server
+
+ql_start_node_server(){
+   echo "starting a new server";
+  ( ql_node_server &> "$HOME/.quicklock/server.log" & disown; )
+}
+
+if [[ -z "$(ql_get_server_port)" ]]; then
+    ql_start_node_server;
+ else
+    echo "node server already running";
+fi
+
+
+ql_source_latest(){
+  . "$HOME/.quicklock/ql.sh";
+}
+
 
 ql_uninstall(){
     rm -rf "$HOME/.quicklock"
@@ -122,6 +148,10 @@ ql_match_arg(){
     return 1;
 }
 
+ql_kill_node_server(){
+  echo "" > "$HOME/.quicklock/server-port.json"
+  pkill -f "bin/ql_node_server"
+}
 
 ql_join_arry_to_json(){
       arr=( "$@" );
@@ -408,10 +438,13 @@ EOF`
 
 ql_connect(){
 
-   port_file="$HOME/.quicklock/server-port.json"
+    typeset -i my_num=$(ql_get_server_port);
 
-   my_str=$(cat "$port_file");
-   typeset -i my_num="${my_str:-"1"}"
+    if [[ -z "$my_num" ]]; then
+      ql_start_node_server;
+      echo "quicklock: started new tcp server."
+      typeset -i my_num=$(ql_get_server_port)
+    fi
 
     nc -zv localhost ${my_num}  > /dev/null 2>&1
     nc_exit="$?"
@@ -606,6 +639,9 @@ export -f ql_noop;
 export -f ql_match_arg;
 export -f ql_ps;
 export -f ql_join_arry_to_json;
+export -f ql_connect;
+export -f ql_source_latest;
+export -f ql_kill_node_server;
 
 # that's it lulz
 
