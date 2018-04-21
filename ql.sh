@@ -20,6 +20,12 @@ mkdir -p "$HOME/.quicklock/pid_lock_maps"
 # fi
 
 
+which_nodejs="$(which node)";
+if [[ -z "$which_nodejs" ]]; then
+    echo "quicklock depends on nodejs, and the 'node' executable."
+    echo "quicklock recommends using NVM: https://github.com/creationix/nvm"
+fi
+
 ql_uninstall(){
     rm -rf "$HOME/.quicklock"
 }
@@ -416,7 +422,7 @@ ql_connect(){
     fi
 
 
-   echo "quicklock: server port: $my_num\n";
+    echo "quicklock: server port: $my_num";
 
     local pid="$$"
     export ql_server_port=${my_num};
