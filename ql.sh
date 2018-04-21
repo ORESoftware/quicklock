@@ -470,7 +470,7 @@ ql_connect(){
  "{"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}"
 EOF`
 
-    echo "$json"  > nc localhost ${my_num}
+    echo "$json" | nc localhost ${my_num}
     echo "quicklock: made new connection to tcp server on port $my_num."
     return 0;
 }

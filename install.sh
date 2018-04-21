@@ -13,9 +13,12 @@ cd "$HOME"
 
 mkdir -p "$HOME/.quicklock/locks"
 mkdir -p "$HOME/.quicklock/nodejs"
+touch "$HOME/.quicklock/server-port.json"
 
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
+
+
 
 cache_location="$(npm config get cache)";
 
