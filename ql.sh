@@ -95,14 +95,14 @@ ql_reinstall(){
 
 
 ql_get_next_int(){
-#   ql_acquire_lock my_ql
+   ( ql_acquire_lock ql_int_lock ) &> /dev/null
    my_file="$HOME/.quicklock/next_int.json"
    touch "$my_file"
    my_str=$(cat "$my_file");
    typeset -i my_num="${my_str:-"1"}"
    echo "$((++my_num))" | tee "$my_file"
-#   echo "no going to release lock"
-#   ql_release_lock my_ql
+   echo "releasing lock..."
+   ( ql_release_lock ql_int_lock --force )   &> /dev/null
 }
 
 
@@ -125,12 +125,6 @@ ql_echo_current_lockname (){
 
 on_ql_trap (){
 
-#   echo "trippity trappity: $ql_no_more_trap";
-#
-#   if [[ "$ql_no_more_trap" == "yes" ]]; then
-#      return 0;
-#   fi
-
    echo "";
    echo "quicklock: process with pid '$$' caught/trapped a signal.";
 #   echo "quicklock: signal trapped: '$1'."
@@ -140,7 +134,6 @@ on_ql_trap (){
 #   ql_pid="$$" ql_node_release_all | while read lock; do
 #     ql_release_lock "${lock}"
 #   done;
-
 }
 
 ql_ps(){
@@ -193,8 +186,8 @@ ql_kill_node_server(){
 }
 
 ql_join_arry_to_json(){
-      arr=( "$@" );
-      len=${#arr[@]}
+      local arr=( "$@" );
+      local len=${#arr[@]}
 
       if [[ ${len} -eq 0 ]]; then
         >&2 echo "Error: Length of input array needs to be at least 2.";
@@ -206,8 +199,8 @@ ql_join_arry_to_json(){
          return 1;
       fi
 
-      data="";
-      foo=0;
+      local data="";
+      local foo=0;
       for i in "${arr[@]}"; do
           char=","
           if [ $((++foo%2)) -eq 0 ]; then
@@ -222,31 +215,33 @@ ql_join_arry_to_json(){
             app="${i:1}"  # remove first char
           fi
 
-          data="$data$char$app"
+          data="$data$char$app";
 
       done
 
-      data="${data:1}"  # remove first char
-      echo "{$data}"    # add braces around the string
-  }
+      data="${data:1}";  # remove first char
+      echo "{$data}";    # add braces around the string
+}
 
 
 ql_ls () {
-   my_array=( "$@" );
-   ql_all=$(ql_match_arg "-a" "${my_array[@]}")
+   local my_array=( "$@" );
+   local ql_all=$(ql_match_arg "-a" "${my_array[@]}");
 
    if [[ "$ql_all" == "yes" ]]; then
-      ql_ls_all $@
+      ql_ls_all $@;
       return 0;
    fi
 
-   ql_json=$(ql_match_arg "--json" "${my_array[@]}")
-   ql_pid="$$" ql_json="$ql_json" ql_node_ls_all
+   ql_json=$(ql_match_arg "--json" "${my_array[@]}");
+   ql_pid="$$" ql_json="$ql_json" ql_node_ls_all;
 }
 
 ql_ls_all () {
    local home="$HOME/.quicklock/locks"
-   for i in $(ls "$HOME/.quicklock/locks"); do  echo -e "${ql_cyan}$home/$i${ql_no_color}"; done;
+   for i in $(ls "$HOME/.quicklock/locks"); do
+        echo -e "${ql_cyan}$home/$i${ql_no_color}";
+   done;
 }
 
 
@@ -265,7 +260,7 @@ ql_write_message () {
       return 1;
    fi
 
-   echo "foo" > "${lockname}/${pid}"
+   echo "foo" > "${lockname}/${pid}";
    echo "sent message"
 }
 
@@ -283,7 +278,7 @@ ql_get_lockname (){
 
     if [[ "$lockname" =~ [^a-zA-Z0-9\-\_] ]]; then
          >&2 echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
-        on_ql_conditional_exit
+        on_ql_conditional_exit;
         return 1;
     fi
 
@@ -297,7 +292,6 @@ ql_get_lockname (){
    fi
 
    echo "$lockname";
-
 }
 
 ql_noop(){
@@ -348,13 +342,13 @@ ql_on_named_pipe_msg (){
 
   echo -e "quicklock: received piped message.";
   local ql_msg="$1";
-  echo -e "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}"
-  ql_release_lock
+  echo -e "${ql_magenta}quicklock: releasing lock because of piped message.${ql_no_color}";
+  ql_release_lock;
 }
 
 ql_acquire_lock () {
 
-   my_array=( "$@" );
+   local my_array=( "$@" );
    local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
 
   if [[ -z "$name" ]]; then
@@ -364,7 +358,7 @@ ql_acquire_lock () {
 
   mkdir -p "$HOME/.quicklock/locks";
 
-  fle=$(echo "${name}" | tr "/" _);
+  local fle=$(echo "${name}" | tr "/" _);
 
   if [[ "$fle" =~ [^a-zA-Z0-9\-\_] ]]; then
     echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
@@ -373,8 +367,7 @@ ql_acquire_lock () {
     return 1;
   fi
 
-
-  local qln="$HOME/.quicklock/locks/${fle}.lock"
+   local qln="$HOME/.quicklock/locks/${fle}.lock"
 
    mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with path '${qln}'${ql_no_color}";
@@ -392,7 +385,7 @@ ql_acquire_lock () {
     return 1;
   }
 
-  ql_keep=$(ql_match_arg "--keep" "${my_array[@]}")
+  local ql_keep=$(ql_match_arg "--keep" "${my_array[@]}")
 
   # use node.js process to register lockname with this pid
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
@@ -402,24 +395,17 @@ ql_acquire_lock () {
 
   trap on_ql_trap EXIT HUP QUIT TERM;
 
-
     #  trap on_ql_trap 0;
     #  trap on_ql_trap SIGHUP;
-    #  trap on_ql_trap HUP;
     #  trap on_ql_trap USR1;
     #  trap on_ql_trap USR2;
     #  trap on_ql_trap SIGUSR1;
     #  trap on_ql_trap SIGUSR2;
-    #  trap on_ql_trap SIGHUP;
-    #  trap on_ql_trap HUP;
 
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
 
    if  ql_connect; then
       typeset -i ql_server_port="$(ql_get_server_port)";
-
-        echo "foooo" > "$HOME/.quicklock/debug.log";
-#        tail -f ${my_named_pipe} | ql_conditional_release &> "$HOME/.quicklock/debug.log" & disown # &> "$HOME/.quicklock/debug.log";
       (
          # here we write/read to the tcp connection via the named pipe
          tail -f ${my_named_pipe} |
@@ -432,7 +418,7 @@ ql_acquire_lock () {
        echo "ql was NOT able to connect to tcp server.";
    fi
 
-       local pid="$$";
+      local pid="$$";
       local json=`cat <<EOF
  {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
 EOF`
@@ -478,33 +464,38 @@ ql_ask_release(){
   {"quicklock":true,"releaseLock":true,"lockName":"${lock_name}","isRequest":true,"lockHolderPID":"${pid}"}
 EOF`
 
-     ql_node_value="$json" ql_to=2500 ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
+     set -o pipefail
+
+     ql_node_value="$json" \
+     ql_to=2500 \
+     ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
          echo "response from server: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
             return 0;
          fi
       done;
+
+     local exit_code=$?
+     set +o pipefail
+
+     if [[ "${exit_code}" -eq "0" ]]; then
+        echo "quicklock: lock was released!";
+     fi
+
+       >&2 echo "quicklock: could not release lock.";
+        return 1;
+
+   else
+        >&2 echo "quicklock: could not make a connection to server.";
+        >&2 echo "quicklock: could not release lock.";
+       return 1;
    fi
-
-   >&2 echo "quicklock: could not release lock.";
-   return 1;
-
 }
 
 
 ql_connect(){
-
     ql_conditional_start_server;
-    typeset -i my_num=$(ql_get_server_port);
-
-#    echo "quicklock: server port: $my_num";
-
-
-
-
-#    echo "$json" | nc localhost ${my_num} &> /dev/null
-#    echo "quicklock: made new connection to tcp server on port $my_num."
 }
 
 
@@ -548,7 +539,7 @@ ql_release_lock () {
 
     ql_get_next_int > "$HOME/.quicklock/release.call.count.json"
 
-    my_array=( "$@" );
+    local my_array=( "$@" );
     local quicklock_name="";
     local is_force=$(ql_match_arg "--force" "${my_array[@]}")
 
@@ -608,19 +599,23 @@ ql_release_lock () {
       pid_inside="$$";
    fi
 
+   # delete the lock in pid_lock_maps folder
    ql_pid="$pid_inside" ql_lock_name="$quicklock_name" ql_full_lock_path="$ql_full_lock_path" ql_node_release;
 
+   local exit_code="$?"
+   if [[ ! "$exit_code" -eq "0" ]]; then
+        >&2 echo -e "${ql_orange}quicklock warning: could not delete lock from lock maps dir.${ql_no_color}";
+   fi
+
+   # delete the main lock dir
    rm -r "${ql_full_lock_path}" &> /dev/null && {
         echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";
         ql_get_next_int > "$HOME/.quicklock/release.count.json";
    } ||
    {
-        >&2 echo -e "${ql_magenta}quicklock: no lock existed for lock '${ql_full_lock_path}'.${ql_no_color}"; ql_maybe_fail;
+        >&2 echo -e "${ql_magenta}quicklock: no lock existed for lock '${ql_full_lock_path}'.${ql_no_color}";
+        ql_maybe_fail;
    };
-
-#   export ql_no_more_trap="yes";
-#   trap - EXIT; # clear/unset trap
-#   trap ql_noop EXIT;
 
 }
 
