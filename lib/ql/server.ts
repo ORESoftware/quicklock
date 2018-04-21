@@ -27,12 +27,12 @@ const s = net.createServer(function (socket: QuicklockSocket) {
   
   socket.on('data', function (d) {
     console.log('raw data from socket:', String(d));
-    socket.write('received_data\n');
+    socket.write('received_raw_data\n');
   })
   .pipe(createParser())
   .on(eventName, function (v: any) {
     
-    socket.write('received_json\n');
+    socket.write(`received_json => ${JSON.stringify(v)}\n`);
     
     if (!v) {
       console.error('Parsed JSON is not an object.');
@@ -55,7 +55,7 @@ const s = net.createServer(function (socket: QuicklockSocket) {
       
       let s;
       if (s = map.get(v.lockHolderPID)) {
-        writeToStream(s, {releaseLock: true, lockName: v.lockName});
+        writeToStream(s, {releaseLock: true, lockName: v.lockName, isResponse: true});
       }
       else {
         console.error('no socket connection with pid:', v.lockHolderPID);

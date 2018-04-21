@@ -38,13 +38,38 @@ fi
 ql_start_node_server(){
    echo "starting a new server";
   ( ql_node_server &> "$HOME/.quicklock/server.log" & disown; )
+  sleep 1;
 }
 
-if [[ -z "$(ql_get_server_port)" ]]; then
-    ql_start_node_server;
- else
-    echo "node server already running";
-fi
+ql_conditional_start_server(){
+
+    typeset -i my_num=$(ql_get_server_port)
+
+    if [[ -z "$my_num" ]]; then
+      ql_kill_node_server;
+      ql_start_node_server;
+      echo "quicklock: started new tcp server."
+      return 0;
+    fi
+
+    nc -zv localhost ${my_num}  > /dev/null 2>&1
+    nc_exit="$?"
+
+    if [ ! "${nc_exit}" -eq "0" ]; then
+         >&2 echo "quicklock: could not connect at port $my_num, restarting server.";
+         >&2 echo "to discover port use the ql_get_server_port command".
+        ql_kill_node_server;
+        ql_start_node_server;
+    fi
+
+}
+
+
+#if [[ -z "$(ql_get_server_port)" ]]; then
+#    ql_start_node_server;
+# else
+#    echo "node server already running";
+#fi
 
 
 ql_source_latest(){
@@ -364,7 +389,7 @@ ql_acquire_lock () {
   # use node.js process to register lockname with this pid
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
 
-  export my_named_pipe="${qln}/$$"
+  local my_named_pipe="${qln}/$$"
   mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
 
   trap on_ql_trap EXIT HUP QUIT TERM;
@@ -383,10 +408,21 @@ ql_acquire_lock () {
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
 
    if  ql_connect; then
-      nc localhost ${ql_server_port} | ql_node_receiver | ql_conditional_release & disown;
+      typeset -i ql_server_port="$(ql_get_server_port)";
+
+        echo "foooo" > "$HOME/.quicklock/debug.log";
+#        tail -f ${my_named_pipe} | ql_conditional_release &> "$HOME/.quicklock/debug.log" & disown # &> "$HOME/.quicklock/debug.log";
+      ( tail -f ${my_named_pipe} | nc localhost ${ql_server_port} | ql_node_receiver | ql_conditional_release &> "$HOME/.quicklock/debug.log" & disown; ) &> /dev/null
    else
        echo "ql was NOT able to connect to tcp server.";
    fi
+
+       local pid="$$";
+      local json=`cat <<EOF
+ "{"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}"
+EOF`
+
+   echo "$json" > ${my_named_pipe};
 
 #  echo "";
 
@@ -416,10 +452,10 @@ ql_ask_release(){
    fi
 
    echo "quicklock: request release of lock that is held by pid: $pid";
-   echo "server port: $ql_server_port";
 
    if ql_connect; then
 
+     typeset -i ql_server_port=$(ql_get_server_port);
      echo "connected to server, at port: $ql_server_port";
 #     json=$(ql_join_arry_to_json quicklock ^true)
 
@@ -444,41 +480,22 @@ EOF`
 
 ql_connect(){
 
+    ql_conditional_start_server;
     typeset -i my_num=$(ql_get_server_port);
 
-    if [[ -z "$my_num" ]]; then
-      ql_start_node_server;
-      echo "quicklock: started new tcp server."
-      typeset -i my_num=$(ql_get_server_port)
-    fi
-
-    nc -zv localhost ${my_num}  > /dev/null 2>&1
-    nc_exit="$?"
-
-    if [ ! "${nc_exit}" -eq "0" ]; then
-         >&2  echo "quicklock: could not connect.";
-         return 1;
-    fi
+#    echo "quicklock: server port: $my_num";
 
 
-    echo "quicklock: server port: $my_num";
 
-    local pid="$$"
-    export ql_server_port=${my_num};
 
-   local json=`cat <<EOF
- "{"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}"
-EOF`
-
-    echo "$json" | nc localhost ${my_num}
-    echo "quicklock: made new connection to tcp server on port $my_num."
-    return 0;
+#    echo "$json" | nc localhost ${my_num} &> /dev/null
+#    echo "quicklock: made new connection to tcp server on port $my_num."
 }
 
 
 ql_conditional_release(){
 #   while read line; do ql_release_lock "$line"; done;
-   while read line; do echo "go stdin: $line"; done &
+   while read line; do echo "got some stdin: $line"; done
 }
 
 
@@ -650,6 +667,7 @@ export -f ql_source_latest;
 export -f ql_kill_node_server;
 export -f ql_conditional_release;
 export -f ql_get_server_port;
+export -f ql_conditional_start_server;
 
 
 # that's it lulz
