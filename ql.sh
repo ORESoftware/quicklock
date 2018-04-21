@@ -425,7 +425,7 @@ ql_acquire_lock () {
          tail -f ${my_named_pipe} |
          nc localhost ${ql_server_port} |
          ql_node_receiver |
-         ql_conditional_release &> "$HOME/.quicklock/debug.log" | ${my_named_pipe} & disown;
+         ql_conditional_release &> "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
       ) &> /dev/null
 
    else
