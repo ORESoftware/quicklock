@@ -61,9 +61,9 @@ ql_conditional_start_server(){
     fi
 
     nc -zv localhost ${my_num}  > /dev/null 2>&1
-    nc_exit="$?"
+    local nc_exit="$?"
 
-    if [ ! "${nc_exit}" -eq "0" ]; then
+    if [[ "${nc_exit}" -ne "0" ]]; then
          >&2 echo "quicklock: could not connect at port $my_num, restarting server.";
          >&2 echo "quicklock: to discover port use the ql_get_server_port command".
         ql_kill_node_server;
@@ -96,9 +96,9 @@ ql_reinstall(){
 
 ql_get_next_int(){
    ( ql_acquire_lock ql_int_lock ) &> /dev/null
-   my_file="$HOME/.quicklock/next_int.json"
+   local my_file="$HOME/.quicklock/next_int.json"
    touch "$my_file"
-   my_str=$(cat "$my_file");
+   local my_str=$(cat "$my_file");
    typeset -i my_num="${my_str:-"1"}"
    echo "$((++my_num))" | tee "$my_file"
    ( ql_release_lock ql_int_lock --force )   &> /dev/null
@@ -201,14 +201,14 @@ ql_join_arry_to_json(){
       local data="";
       local foo=0;
       for i in "${arr[@]}"; do
-          char=","
+          local char=","
           if [ $((++foo%2)) -eq 0 ]; then
                char=":";
           fi
 
-          first="${i:0:1}";  # read first charc
+          local first="${i:0:1}";  # read first charc
 
-          app="\"$i\""
+          local app="\"$i\""
 
           if [[ "$first" == "^" ]]; then
             app="${i:1}"  # remove first char
@@ -247,7 +247,6 @@ ql_ls_all () {
 ql_write_message () {
     local lockname="$(ql_get_lockname "$1")";
     local pid="$(ql_get_lockowner_pid ${lockname})";
-#   local pid="$(ql_get_lockowner_pid | head -n 1)";
 
    if [[  -z "$pid" ]]; then
        >&2 echo "quicklock: error: no pid could be found.";
@@ -303,6 +302,7 @@ ql_get_lockowner_pid () {
     local lockname="$(ql_get_lockname "$1")";
 
     if [[ -z "$lockname" ]]; then
+        >&2 echo "quicklock: no lockname available.";
        return 1;
     fi
 
