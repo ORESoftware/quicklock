@@ -338,23 +338,23 @@ ql_ask_release(){
 
 #     my_named_pipe
 
-     mkdir -p "$HOME/.quicklock/named_pipes"
-     local named_pipe="$HOME/.quicklock/named_pipes/$$";
-     rm -rf ${named_pipe};
-     mkfifo ${named_pipe};
+#     mkdir -p "$HOME/.quicklock/named_pipes"
+#     local named_pipe="$HOME/.quicklock/named_pipes/$$";
+#     rm -rf ${named_pipe};
+#     mkfifo ${named_pipe};
 
-      tail -f ${named_pipe} | nc localhost "${ql_server_port}" | while read response; do
+     ql_node_value="{\"quicklock\":true}" ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
          echo "response from server: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
 #            return 0;
          fi
-      done &
+      done;
    fi
 
 
-     echo -e "{\"quicklock\":true}\n" > ${named_pipe}
-     wait;
+#     echo -e "{\"quicklock\":true}\n" > ${named_pipe}
+#     wait;
 
 
      echo "about to echo stuff 2";
