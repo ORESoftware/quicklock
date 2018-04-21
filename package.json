@@ -7,9 +7,10 @@
     "ql_node_release_all": "lib/ql/release-all.js",
     "ql_node_ls_all": "lib/ql/ls.js",
     "ql_node_server": "lib/ql/server.js",
-    "ql_node_receiver": "lib/ql/receiver.js"
+    "ql_node_receiver": "lib/ql/receiver.js",
+    "ql_write_and_keep_open": "lib/ql/write-and-keep-open.js"
   },
-  "version": "0.0.110",
+  "version": "0.0.111",
   "description": "Quick locks for scripts",
   "main": "index.js",
   "scripts": {
