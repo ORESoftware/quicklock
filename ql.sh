@@ -101,7 +101,6 @@ ql_get_next_int(){
    my_str=$(cat "$my_file");
    typeset -i my_num="${my_str:-"1"}"
    echo "$((++my_num))" | tee "$my_file"
-   echo "releasing lock..."
    ( ql_release_lock ql_int_lock --force )   &> /dev/null
 }
 
@@ -182,7 +181,7 @@ ql_match_arg(){
 
 ql_kill_node_server(){
   echo "" > "$HOME/.quicklock/server-port.json"
-  pkill -f "bin/ql_node_server"
+  pkill -c -f "bin/ql_node_server" | while read line; do echo "Server instances killed: $line"; done;
 }
 
 ql_join_arry_to_json(){
@@ -537,7 +536,7 @@ ql_release_lock_force(){
 
 ql_release_lock () {
 
-    ql_get_next_int > "$HOME/.quicklock/release.call.count.json"
+#    ql_get_next_int > "$HOME/.quicklock/release.call.count.json"
 
     local my_array=( "$@" );
     local quicklock_name="";
@@ -610,7 +609,6 @@ ql_release_lock () {
    # delete the main lock dir
    rm -r "${ql_full_lock_path}" &> /dev/null && {
         echo -e "${ql_cyan}quicklock: lock with name '${quicklock_name}' was released.${ql_no_color}";
-        ql_get_next_int > "$HOME/.quicklock/release.count.json";
    } ||
    {
         >&2 echo -e "${ql_magenta}quicklock: no lock existed for lock '${ql_full_lock_path}'.${ql_no_color}";
