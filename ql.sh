@@ -65,7 +65,7 @@ ql_conditional_start_server(){
 
     if [ ! "${nc_exit}" -eq "0" ]; then
          >&2 echo "quicklock: could not connect at port $my_num, restarting server.";
-         >&2 echo "to discover port use the ql_get_server_port command".
+         >&2 echo "quicklock: to discover port use the ql_get_server_port command".
         ql_kill_node_server;
         ql_start_node_server;
     fi
