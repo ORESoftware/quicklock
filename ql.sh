@@ -103,6 +103,8 @@ ql_unlock_process(){
 }
 
 ql_match_arg(){
+    # checks to see if the first arg, is among the remaining args
+    # for example  ql_match_arg --json --json # yes
     first_item="$1";
     shift;
         for var in "$@"; do
@@ -246,10 +248,25 @@ ql_get_lockowner_pid () {
 }
 
 ql_remove_all_locks (){
+   local count=$(find "$HOME/.quicklock/locks" -mindepth 1 -maxdepth 1 -type d | wc -l);
+   typeset -i my_num="${count}"
    rm -rf "$HOME/.quicklock/locks";
    mkdir -p "$HOME/.quicklock/locks";
    rm -rf "$HOME/.quicklock/pid_lock_maps";
    mkdir -p "$HOME/.quicklock/pid_lock_maps";
+   echo "quicklock: ${my_num} lock(s) removed.";
+}
+
+ql_remove_locks(){
+  local pid="$$";
+  declare -i count=0;
+  ql_pid="$pid" ql_node_ls_all | while read line; do
+    count=$((count+1));
+    echo "count: $count";
+    echo "deleting lock: $line";
+    rm -rf "$line";
+  done;
+  echo "quicklock: $count lock(s) removed."
 }
 
 ql_on_named_pipe_msg (){
@@ -362,47 +379,23 @@ ql_ask_release(){
    if ql_connect; then
 
      echo "connected to server, at port: $ql_server_port";
-#     echo "{\"lockHolderPID\":\"$pid\",\"releaseLock\":true,\"lockName\":\"$lock_name\"}" &>3;
-#     echo "" &>3;
-#     local response="$(timeout 45 cat <&3)"
-#     local response="$(cat <&3)"
+#     json=$(ql_join_arry_to_json quicklock ^true)
 
-#     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}" > nc localhost ${ql_server_port};
-#     echo "" > nc localhost ${ql_server_port};
+  local json=`cat <<EOF
+  {"quicklock":true,"releaseLock":true,"lockName":"${lock_name}","isRequest":true,"lockHolderPID":"${pid}"}
+EOF`
 
-#      nc localhost ${ql_server_port}
-
-     echo "about to echo stuff 1";
-
-#     echo "{\"quicklock\":true,\"releaseLock\":true,\"lockName\":\"$lock_name\",\"isRequest\":true}"
-
-#     my_named_pipe
-
-#     mkdir -p "$HOME/.quicklock/named_pipes"
-#     local named_pipe="$HOME/.quicklock/named_pipes/$$";
-#     rm -rf ${named_pipe};
-#     mkfifo ${named_pipe};
-
-     json=$(ql_join_arry_to_json quicklock ^true)
-
-     ql_node_value="$json" ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
+     ql_node_value="$json" ql_to=2500 ql_write_and_keep_open | nc localhost "${ql_server_port}" | while read response; do
          echo "response from server: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
-#            return 0;
+            return 0;
          fi
       done;
    fi
 
-
-#     echo -e "{\"quicklock\":true}\n" > ${named_pipe}
-#     wait;
-
-
-     echo "about to echo stuff 2";
-
-#   >&2 echo "quicklock: could not connect to server.";
-#   return 1;
+   >&2 echo "quicklock: could not release lock.";
+   return 1;
 
 }
 
@@ -414,34 +407,25 @@ ql_connect(){
    my_str=$(cat "$port_file");
    typeset -i my_num="${my_str:-"1"}"
 
-#    nc -zv localhost ${my_num}  > /dev/null 2>&1
-#    nc_exit="$?"
-#
-#    if [ ! "${nc_exit}" -eq "0" ]; then
-#         >&2  echo "quicklock: could not connect.";
-#         return 1;
-#    fi
+    nc -zv localhost ${my_num}  > /dev/null 2>&1
+    nc_exit="$?"
+
+    if [ ! "${nc_exit}" -eq "0" ]; then
+         >&2  echo "quicklock: could not connect.";
+         return 1;
+    fi
 
 
-#   echo "quicklock: server port: $my_num\n";
+   echo "quicklock: server port: $my_num\n";
 
-    BASH_PID="$$"
-    ARGS=""; for i; do ARGS=$(printf '%s"%s"' "$ARGS", "$i"); done;
-    ARGS=${ARGS#,}
-
-#    exec 3<>"/dev/tcp/localhost/$my_num"  # persistent file descriptor
-#
-#    exit_code=$?
-#
-#    if [[ ${exit_code} -ne 0 ]]; then
-#      >&2  echo "quicklock: could not connect.";
-#      return 1;
-#    fi
-
+    local pid="$$"
     export ql_server_port=${my_num};
 
-    echo "{\"init\":true,\"quicklock\":true,\"pid\":${BASH_PID},\"args\":[${ARGS}],\"cwd\":\"$(pwd)\"}"  > nc localhost ${my_num}
-    echo "" > nc localhost ${my_num}
+   local json=`cat <<EOF
+ "{"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}"
+EOF`
+
+    echo "$json"  > nc localhost ${my_num}
     echo "quicklock: made new connection to tcp server on port $my_num."
     return 0;
 }
