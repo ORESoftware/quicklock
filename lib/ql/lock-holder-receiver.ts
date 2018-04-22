@@ -5,6 +5,7 @@ import {createParser, eventName, writeToStream} from './json-parser';
 
 process.stdin.resume()
 .on('data', function(v){
+  console.log('json received in lock holder receiver...', v);
   console.error('json received in lock holder receiver...', v);
 })
 .pipe(createParser()).on(eventName, function (v: any) {

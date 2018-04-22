@@ -477,7 +477,10 @@ EOF`
 
 #    trap -- '' PIPE
  # | ql_timeout 2600
-      tail -f ${my_fifo} | ql_receiver_lock_requestor | while read response; do
+
+     echo "fifo: ${my_fifo}";
+
+      tail -f ${my_fifo} | ql_receiver_lock_requestor 2> "$HOME/.quicklock/debug.log" | while read response; do
          echo "response from lock holder: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
