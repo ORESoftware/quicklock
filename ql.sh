@@ -417,7 +417,10 @@ ql_acquire_lock () {
 
   (
      # here we write/read to the tcp connection via the named pipe
-     tail -f "${my_input}" | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" >> "${my_output}" & disown;
+     tail -f "${my_input}" | ql_receiver_lock_holder | while read line; do
+       echo "$line" > "${my_output}";
+      done & disown;
+
 #     cat ${my_named_pipe} | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
 #     ql_conditional_release > ${my_named_pipe} & disown;
   ) &> /dev/null
@@ -489,9 +492,12 @@ EOF`
 
      set -o pipefail;
 
-     echo "about to write a request." | tee -a "$HOME/.quicklock/debug.log"
+     echo "about to write a request." | tee -a "$HOME/.quicklock/debug.log";
+
      (
-        ql_node_value="$json" ql_write_and_keep_open | tee -a "$HOME/.quicklock/debug.log" >> "${input_fifo}" &
+        ql_node_value="$json" ql_write_and_keep_open | while read line; do
+               echo "$line" > "${input_fifo}" ;
+         done &
      ) &> /dev/null
 
     #    trap -- '' PIPE
