@@ -387,7 +387,12 @@ ql_acquire_lock () {
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
 
   local my_named_pipe="${qln}/$$"
-  mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
+
+  if [[ ! -f "${my_named_pipe}" ]]; then
+     # if the file does not exist we create it
+     mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
+  fi
+
 
   trap on_ql_trap EXIT HUP QUIT TERM;
 
@@ -402,9 +407,9 @@ ql_acquire_lock () {
 
   (
      # here we write/read to the tcp connection via the named pipe
-     tail -f ${my_named_pipe} |
-     ql_receiver_lock_holder 2> "$HOME/.quicklock/debug.log" |
-     ql_conditional_release 2> "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
+     cat ${my_named_pipe} |
+     ql_receiver_lock_holder | tee "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
+#     ql_conditional_release > ${my_named_pipe} & disown;
   ) &> /dev/null
 
       local pid="$$";
@@ -469,18 +474,18 @@ ql_ask_release(){
 EOF`
 
      set -o pipefail
-   (
-     ql_node_value="$json" \
-     ql_to=2400 \
-     ql_write_and_keep_open > ${my_fifo} &
-    ) &> "$HOME/.quicklock/debug.log"
+
+     (
+         ql_node_value="$json" ql_write_and_keep_open > ${my_fifo} &
+     )
+     &> "$HOME/.quicklock/debug.log"
 
 #    trap -- '' PIPE
  # | ql_timeout 2600
 
-     echo "fifo: ${my_fifo}";
+      echo "the fifo: ${my_fifo}";
 
-      tail -f ${my_fifo} | ql_receiver_lock_requestor 2> "$HOME/.quicklock/debug.log" | while read response; do
+      cat ${my_fifo} | ql_timeout 3600 | ql_receiver_lock_requestor | while read response; do
          echo "response from lock holder: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
@@ -497,7 +502,7 @@ EOF`
         return 0;
      fi
 
-   >&2 echo "quicklock: could not release lock.";
+    >&2 echo "quicklock: could not release lock.";
     return 1;
 }
 
@@ -509,7 +514,10 @@ ql_connect(){
 
 ql_conditional_release(){
 #   while read line; do ql_release_lock "$line"; done;
-   while read line; do echo "got some stdin: $line"; done
+   while read line; do
+       echo "got some stdin: $line" >> "$HOME/.quicklock/debug.log"
+       echo "got some stdin: $line";
+   done;
 }
 
 

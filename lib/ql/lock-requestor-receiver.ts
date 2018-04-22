@@ -4,20 +4,20 @@
 import {createParser, eventName, writeToStream} from './json-parser';
 
 process.stdin.resume()
-.on('data', function(v){
-  console.log('json received in lock requestor receiver...', v);
-  console.error('json received in lock requestor receiver...', v);
-})
+// .on('data', function(v){
+//   console.log('json received in lock requestor receiver...', v);
+//   console.error('json received in lock requestor receiver...', v);
+// })
 .pipe(createParser()).on(eventName, function (v: any) {
   
-  console.error('json received in receiver...', JSON.stringify(v));
+  console.log('json received in lock requestor receiver...', JSON.stringify(v));
   
   if(v.releaseLock === true && v.isResponse === true && v.lockName){
     console.log(v.lockName);
     console.log('released.');
   }
   else{
-    console.error('lockName not defined.')
+    console.error('lockName not defined in lock requestor receiver.')
   }
 });
 
