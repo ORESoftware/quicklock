@@ -15,13 +15,13 @@ if (process.env.ql_read_stdin === 'yes') {
   });
 }
 
-const to = parseInt(process.env.ql_timeout || process.env.ql_to || '0');
-
-if(to){
-  setTimeout(function () {
-    console.error(`Error: timed out after ${to} milliseconds.`);
-    process.exit(1);
-  }, to);
-}
+// const to = parseInt(process.env.ql_timeout || process.env.ql_to || '0');
+//
+// if(to){
+//   setTimeout(function () {
+//     console.error(`Error: timed out after ${to} milliseconds.`);
+//     process.exit(1);
+//   }, to);
+// }
 
 console.log(process.env.ql_node_value);

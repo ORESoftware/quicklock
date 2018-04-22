@@ -17,6 +17,7 @@ process.stdin.resume()
     console.log('released.');
   }
   else{
+    console.log('lockName not defined in lock holder receiver.');
     console.error('lockName not defined in lock holder receiver.')
   }
 });

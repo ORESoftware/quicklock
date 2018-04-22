@@ -306,10 +306,13 @@ ql_get_lockowner_pid () {
 #    local lockname="$(ql_get_lockname "$1" | head -n 1)"
     # echo the contents of the directory, should log PID if exists
 
-    ls "$lockname" || {
-       >&2 echo "quicklock: it does not appear that the lock exists for lockname: '$lockname'"
-       return 1;
-     }
+#    ls "$lockname" || {
+#       >&2 echo "quicklock: it does not appear that the lock exists for lockname: '$lockname'"
+#       return 1;
+#     }
+
+     # there are multiple files in the $lockname folder, we pick one of them (77148.input or 77148.output)
+    ls "$lockname" | head -n 1 | cut -d '.' -f 1
 }
 
 ql_remove_all_locks (){
@@ -368,7 +371,7 @@ ql_acquire_lock () {
    mkdir "${qln}" &> /dev/null || {
     echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with path '${qln}'${ql_no_color}";
 
-    local pid_inside="$(ls "${qln}" 2> /dev/null)";
+    local pid_inside="$(ql_get_lockowner_pid "${fle}" 2> /dev/null)";
 
     if [[ "$pid_inside" == "$$" ]]; then
         echo -e "${ql_magenta}quicklock: this process already owns the desired lock.${ql_no_color}";
@@ -386,13 +389,18 @@ ql_acquire_lock () {
   # use node.js process to register lockname with this pid
   ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
 
-  local my_named_pipe="${qln}/$$"
+  local my_input="${qln}/$$.input"
+  local my_output="${qln}/$$.output"
 
-  if [[ ! -f "${my_named_pipe}" ]]; then
+  if [[ ! -f "${my_input}" ]]; then
      # if the file does not exist we create it
-     mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
+     mkfifo "${my_input}" &> /dev/null;  # add the PID inside the lock dir
   fi
 
+   if [[ ! -f "${my_output}" ]]; then
+     # if the file does not exist we create it
+     mkfifo "${my_output}" &> /dev/null;  # add the PID inside the lock dir
+  fi
 
   trap on_ql_trap EXIT HUP QUIT TERM;
 
@@ -403,12 +411,14 @@ ql_acquire_lock () {
     #  trap on_ql_trap SIGUSR1;
     #  trap on_ql_trap SIGUSR2;
 
+   echo "input fifo: ${my_input}";
+   echo "output fifo: ${my_output}"
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
 
   (
      # here we write/read to the tcp connection via the named pipe
-     cat ${my_named_pipe} |
-     ql_receiver_lock_holder | tee "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
+     tail -f "${my_input}" | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" >> "${my_output}" & disown;
+#     cat ${my_named_pipe} | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
 #     ql_conditional_release > ${my_named_pipe} & disown;
   ) &> /dev/null
 
@@ -417,17 +427,13 @@ ql_acquire_lock () {
  {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
 EOF`
 
-   echo "$json" > ${my_named_pipe};
-
+   echo "$json" > ${my_input};
 }
-
-
 
 ql_go_home(){
   cd "$HOME/.quicklock";
-  echo "$PWD"
+  echo "$PWD";
 }
-
 
 ql_get_fifo(){
  local pid1="$1";
@@ -461,10 +467,18 @@ ql_ask_release(){
 
    echo "quicklock: request release of lock that is held by pid: $pid";
 
-   local my_fifo=$(ql_get_fifo "$pid" "$lock_name");
-#     json=$(ql_join_arry_to_json quicklock ^true)
+   local my_fifo="$(ql_get_fifo "$pid" "$lock_name")";
+   local input_fifo="$my_fifo.input"
+   local output_fifo="$my_fifo.output"
 
-   if [[ -z "$my_fifo" ]]; then
+   # json=$(ql_join_arry_to_json quicklock ^true)
+
+   if [[ -z "$input_fifo" ]]; then
+     >&2 echo "Could not locate lock holder process.";
+     return 1;
+   fi
+
+    if [[ -z "$output_fifo" ]]; then
      >&2 echo "Could not locate lock holder process.";
      return 1;
    fi
@@ -473,19 +487,20 @@ ql_ask_release(){
   {"quicklock":true,"releaseLock":true,"lockName":"${lock_name}","isRequest":true,"lockHolderPID":"${pid}"}
 EOF`
 
-     set -o pipefail
+     set -o pipefail;
 
+     echo "about to write a request." | tee -a "$HOME/.quicklock/debug.log"
      (
-         ql_node_value="$json" ql_write_and_keep_open > ${my_fifo} &
-     )
-     &> "$HOME/.quicklock/debug.log"
+        ql_node_value="$json" ql_write_and_keep_open | tee -a "$HOME/.quicklock/debug.log" >> "${input_fifo}" &
+     ) &> /dev/null
 
-#    trap -- '' PIPE
- # | ql_timeout 2600
+    #    trap -- '' PIPE
+    # | ql_timeout 2600
 
-      echo "the fifo: ${my_fifo}";
+      echo "input fifo: ${input_fifo}";
+      echo "output fifo: ${output_fifo}";
 
-      cat ${my_fifo} | ql_timeout 3600 | ql_receiver_lock_requestor | while read response; do
+      cat "${output_fifo}" | ql_timeout 3600 | ql_receiver_lock_requestor | while read response; do
          echo "response from lock holder: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
@@ -507,6 +522,13 @@ EOF`
 }
 
 
+ql_start_test(){
+  . ql.sh;
+  ql_remove_all_locks;
+#  pkill -f quicklock
+  pgrep -f quicklock | xargs kill -9
+}
+
 ql_connect(){
     ql_conditional_start_server;
 }
@@ -515,7 +537,7 @@ ql_connect(){
 ql_conditional_release(){
 #   while read line; do ql_release_lock "$line"; done;
    while read line; do
-       echo "got some stdin: $line" >> "$HOME/.quicklock/debug.log"
+       echo "got some stdin: $line" >> "$HOME/.quicklock/debug.log";
        echo "got some stdin: $line";
    done;
 }
