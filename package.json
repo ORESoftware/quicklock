@@ -12,7 +12,7 @@
     "ql_receiver_lock_requestor": "lib/ql/lock-requestor-receiver.js",
     "ql_write_and_keep_open": "lib/ql/write-and-keep-open.js"
   },
-  "version": "0.0.114",
+  "version": "0.0.115",
   "description": "Quick locks for scripts",
   "main": "index.js",
   "scripts": {
