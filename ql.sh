@@ -403,6 +403,80 @@ ql_acquire_lock () {
 
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
 
+  (
+     # here we write/read to the tcp connection via the named pipe
+     tail -f ${my_named_pipe} |
+     ql_node_receiver |
+     ql_conditional_release &> "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
+  ) &> /dev/null
+
+      local pid="$$";
+      local json=`cat <<EOF
+ {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
+EOF`
+
+   echo "$json" > ${my_named_pipe};
+
+}
+
+ql_acquire_lock_OLD () {
+
+   local my_array=( "$@" );
+   local name="${1}"  # the lock name is the first argument, if that is empty, then set the lockname to $PWD
+
+  if [[ -z "$name" ]]; then
+     echo -e "${ql_orange}quicklock: warning - no quicklock_name available so defaulted to \$PWD.${ql_no_color}"
+     name="$PWD";
+  fi
+
+  mkdir -p "$HOME/.quicklock/locks";
+
+  local fle=$(echo "${name}" | tr "/" _);
+
+  if [[ "$fle" =~ [^a-zA-Z0-9\-\_] ]]; then
+    echo -e "${ql_magenta}quicklock: lockname has invalid chars - must be alpha-numeric chars only.${ql_no_color}"
+    echo -e "${ql_magenta}quicklock: could not acquire lock with desired name -> '$fle'.${ql_no_color}"
+    on_ql_conditional_exit
+    return 1;
+  fi
+
+   local qln="$HOME/.quicklock/locks/${fle}.lock"
+
+   mkdir "${qln}" &> /dev/null || {
+    echo -e "${ql_magenta}quicklock: could *NOT* acquire lock with path '${qln}'${ql_no_color}";
+
+    local pid_inside="$(ls "${qln}" 2> /dev/null)";
+
+    if [[ "$pid_inside" == "$$" ]]; then
+        echo -e "${ql_magenta}quicklock: this process already owns the desired lock.${ql_no_color}";
+    else
+        echo -e "${ql_magenta}quicklock: someone else is using that lockname (pid=$pid_inside).${ql_no_color}";
+        echo -e "${ql_magenta}quicklock: to ask them to release the lock use 'ql_ask_release $pid_inside $name').${ql_no_color}";
+    fi
+
+    on_ql_conditional_exit;
+    return 1;
+  }
+
+  local ql_keep=$(ql_match_arg "--keep" "${my_array[@]}")
+
+  # use node.js process to register lockname with this pid
+  ql_keep="$ql_keep" ql_pid="$$" ql_lock_name="$fle" ql_full_lock_path="$qln" ql_node_acquire;
+
+  local my_named_pipe="${qln}/$$"
+  mkfifo "${my_named_pipe}" &> /dev/null;  # add the PID inside the lock dir
+
+  trap on_ql_trap EXIT HUP QUIT TERM;
+
+    #  trap on_ql_trap 0;
+    #  trap on_ql_trap SIGHUP;
+    #  trap on_ql_trap USR1;
+    #  trap on_ql_trap USR2;
+    #  trap on_ql_trap SIGUSR1;
+    #  trap on_ql_trap SIGUSR2;
+
+   echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
+
    if  ql_connect; then
       typeset -i ql_server_port="$(ql_get_server_port)";
       (
@@ -435,8 +509,77 @@ EOF`
 
 }
 
+ql_go_home(){
+  cd "$HOME/.quicklock";
+  echo "$PWD"
+}
+
+
+ql_get_fifo(){
+ local pid1="$1"
+ local full_lock_path=$(ql_get_lockname "$2")
+ local pid2=$(ql_get_lockowner_pid "$full_lock_path")
+ if [[ "$pid1" != "$pid2" ]]; then
+   >&2 echo "quicklock: pids are not equal, cannot retrieve fifo.";
+   return 1;
+ fi
+ echo "$full_lock_path/$pid2"
+}
+
 
 ql_ask_release(){
+
+   local pid="$1"
+   local lock_name="$2"
+
+   if [[ -z "$pid" ]]; then
+      echo "need to pass pid as first argument.";
+      return 1;
+   fi
+
+    if [[ -z "$lock_name" ]]; then
+      echo "need to pass a lock_name as second argument.";
+      return 1;
+   fi
+
+   echo "quicklock: request release of lock that is held by pid: $pid";
+
+   local my_fifo=$(ql_get_fifo "$pid" "$lock_name");
+#     json=$(ql_join_arry_to_json quicklock ^true)
+
+  local json=`cat <<EOF
+  {"quicklock":true,"releaseLock":true,"lockName":"${lock_name}","isRequest":true,"lockHolderPID":"${pid}"}
+EOF`
+
+     set -o pipefail
+   (
+     ql_node_value="$json" \
+     ql_to=2500 \
+     ql_write_and_keep_open > ${my_fifo} &
+    ) &> "$HOME/.quicklock/debug.log"
+
+      tail -f ${my_fifo} | ql_receiver_lock_requestor | while read response; do
+         echo "response from server: $response";
+         if [[ "$response" == "released" ]]; then
+            echo "quicklock: Lock was released.";
+            return 0;
+         fi
+      done;
+
+     local exit_code=$?
+     set +o pipefail
+
+     if [[ "${exit_code}" -eq "0" ]]; then
+        echo "quicklock: lock was released!";
+        return 0;
+     fi
+
+   >&2 echo "quicklock: could not release lock.";
+    return 1;
+
+}
+
+ql_ask_release_OLD(){
 
    local pid="$1"
    local lock_name="$2"

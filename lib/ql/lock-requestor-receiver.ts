@@ -3,7 +3,7 @@
 
 import {createParser, eventName, writeToStream} from './json-parser';
 
-console.log('in the receiver beginning...');
+console.log('quicklock lock requestor: in the receiver beginning...');
 
 process.stdin.resume()
 .on('data', function(){
