@@ -2,6 +2,7 @@
   "name": "quicklock",
   "bin": {
     "quicklock": "lib/index.js",
+    "ql_initial_message": "lib/ql/init-message.js",
     "ql_timeout": "lib/ql/timeout.js",
     "ql_node_acquire": "lib/ql/acquire.js",
     "ql_node_release": "lib/ql/release.js",
