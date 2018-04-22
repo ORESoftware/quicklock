@@ -3,17 +3,15 @@
 
 import {createParser, eventName, writeToStream} from './json-parser';
 
-console.log('quicklock lockholder: in the receiver beginning...');
-
 process.stdin.resume()
-.on('data', function(){
-  console.log('data received in receiver...');
+.on('data', function(v){
+  console.error('json received in lock holder receiver...', v);
 })
 .pipe(createParser()).on(eventName, function (v: any) {
 
-  console.log('json received in receiver...', JSON.stringify(v));
+  console.error('json received in receiver...', JSON.stringify(v));
 
-  if(v.releaseLock === true && v.isResponse === true && v.lockName){
+  if(v.releaseLock === true && v.isRequest === true && v.lockName){
     console.log(v.lockName);
     console.log('released.');
   }

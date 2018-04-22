@@ -3,15 +3,13 @@
 
 import {createParser, eventName, writeToStream} from './json-parser';
 
-console.log('quicklock lock requestor: in the receiver beginning...');
-
 process.stdin.resume()
-.on('data', function(){
-   console.log('data received in receiver...');
+.on('data', function(v){
+  console.error('json received in lock requestor receiver...', v);
 })
 .pipe(createParser()).on(eventName, function (v: any) {
   
-  console.log('json received in receiver...', JSON.stringify(v));
+  console.error('json received in receiver...', JSON.stringify(v));
   
   if(v.releaseLock === true && v.isResponse === true && v.lockName){
     console.log(v.lockName);

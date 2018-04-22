@@ -403,8 +403,8 @@ ql_acquire_lock () {
   (
      # here we write/read to the tcp connection via the named pipe
      tail -f ${my_named_pipe} |
-     ql_receiver_lock_holder |
-     ql_conditional_release &> "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
+     ql_receiver_lock_holder 2> "$HOME/.quicklock/debug.log" |
+     ql_conditional_release 2> "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
   ) &> /dev/null
 
       local pid="$$";
@@ -476,8 +476,8 @@ EOF`
     ) &> "$HOME/.quicklock/debug.log"
 
 #    trap -- '' PIPE
-
-      tail -f ${my_fifo} | ql_timeout 2600 | ql_receiver_lock_requestor | while read response; do
+ # | ql_timeout 2600
+      tail -f ${my_fifo} | ql_receiver_lock_requestor | while read response; do
          echo "response from lock holder: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
