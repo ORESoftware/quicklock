@@ -5,8 +5,8 @@ import {createParser, eventName, writeToStream} from './json-parser';
 
 process.stdin.resume()
 // .on('data', function(v){
-//   console.log('json received in lock requestor receiver...', v);
-//   console.error('json received in lock requestor receiver...', v);
+//   console.log('raw data received in lock requestor receiver...', String(v));
+//   console.error('raw data received in lock requestor receiver...', String(v));
 // })
 .pipe(createParser()).on(eventName, function (v: any) {
   
@@ -17,8 +17,7 @@ process.stdin.resume()
     console.log('released.');
   }
   else{
-    console.log('lockName not defined in lock requestor receiver.');
-    console.error('lockName not defined in lock requestor receiver.')
+    console.error('no action taken in lock requestor receiver.')
   }
 });
 

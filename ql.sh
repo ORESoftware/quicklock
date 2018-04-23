@@ -415,22 +415,26 @@ ql_acquire_lock () {
    echo "output fifo: ${my_output}"
    echo -e "${ql_green}quicklock: acquired lock with name '${qln}'${ql_no_color}";
 
-  (
+#  (
      # here we write/read to the tcp connection via the named pipe
-     tail -f "${my_input}" | ql_receiver_lock_holder | while read line; do
-       echo "$line" > "${my_output}";
-      done & disown;
+      tail -n0 -f  "${my_input}" | ql_receiver_lock_holder | while read line; do
+      echo "lock holder output: $line";
+      echo "the output file: ${my_output}";
+       echo "$line" >> "${my_output}";
+      done #& disown;
 
 #     cat ${my_named_pipe} | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
 #     ql_conditional_release > ${my_named_pipe} & disown;
-  ) &> /dev/null
+#  ) &> /dev/null
 
-      local pid="$$";
-      local json=`cat <<EOF
- {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
-EOF`
-
-   echo "$json" > ${my_input};
+#      local pid="$$";
+#      local json=`cat <<EOF
+# {"init":true,"quicklock":true,"pid":${pid},"cwd":"$(pwd)"}
+#EOF`
+#
+#   echo "wtfffff"
+#   echo "$json" >> ${my_input} | tee -a "$HOME/.quicklock/debug.log"
+#   wait;
 }
 
 ql_go_home(){
@@ -439,17 +443,17 @@ ql_go_home(){
 }
 
 ql_get_fifo(){
- local pid1="$1";
- local lock_name="$2";
- local full_lock_path=$(ql_get_lockname "$lock_name")
- local pid2=$(ql_get_lockowner_pid "$lock_name")
- if [[ "$pid1" != "$pid2" ]]; then
-   >&2 echo "quicklock: pids are not equal, cannot retrieve fifo.";
-   >&2 echo "quicklock: pid 1: $pid1";
-   >&2 echo "quicklock: pid 2: $pid2";
-   return 1;
- fi
- echo "$full_lock_path/$pid2"
+    local pid1="$1";
+    local lock_name="$2";
+    local full_lock_path=$(ql_get_lockname "$lock_name")
+    local pid2=$(ql_get_lockowner_pid "$lock_name")
+    if [[ "$pid1" != "$pid2" ]]; then
+        >&2 echo "quicklock: pids are not equal, cannot retrieve fifo.";
+        >&2 echo "quicklock: pid 1: $pid1";
+        >&2 echo "quicklock: pid 2: $pid2";
+        return 1;
+    fi
+    echo "$full_lock_path/$pid2"
 }
 
 
@@ -492,11 +496,10 @@ EOF`
 
      set -o pipefail;
 
-     echo "about to write a request." | tee -a "$HOME/.quicklock/debug.log";
-
      (
-        ql_node_value="$json" ql_write_and_keep_open | while read line; do
-               echo "$line" > "${input_fifo}" ;
+        ql_node_value="$json" ql_write_and_keep_open  | while read line; do
+              echo "writing this to input fifo: $line" >> "${input_fifo}" ;
+              echo "$line" >> "${input_fifo}" ;
          done &
      ) &> /dev/null
 
@@ -506,7 +509,7 @@ EOF`
       echo "input fifo: ${input_fifo}";
       echo "output fifo: ${output_fifo}";
 
-      cat "${output_fifo}" | ql_timeout 3600 | ql_receiver_lock_requestor | while read response; do
+      tail -n0 -f "${output_fifo}" | ql_timeout 3600 | ql_receiver_lock_requestor | while read response; do
          echo "response from lock holder: $response";
          if [[ "$response" == "released" ]]; then
             echo "quicklock: Lock was released.";
@@ -516,7 +519,7 @@ EOF`
 
      local exit_code=$?;
      set +o pipefail;
-#     trap - PIPE;
+     #  trap - PIPE;
 
      if [[ "${exit_code}" -eq "0" ]]; then
         echo "quicklock: lock was released!";
@@ -563,7 +566,7 @@ ql_maybe_fail () {
 
 
 ql_release_lock_force(){
-  ql_release_lock "$@" --force
+    ql_release_lock "$@" --force
 }
 
 ql_release_lock () {
@@ -675,16 +678,14 @@ ql_release_all_locks(){
   ql_remove_all_locks
 }
 
-# export all of the functions
 
+
+# export all of the functions
 export -f ql_add_colors;
 export -f ql_add_color;
-
 export -f ql_no_color;
 export -f ql_no_colors;
-
 export -f ql_get_next_int;
-
 export -f ql_release_all_locks
 export -f ql_remove_all_locks
 export -f ql_maybe_fail;
