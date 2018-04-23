@@ -418,9 +418,10 @@ ql_acquire_lock () {
 #  (
      # here we write/read to the tcp connection via the named pipe
       tail -n0 -f  "${my_input}" | ql_receiver_lock_holder | while read line; do
-      echo "lock holder output: $line";
-      echo "the output file: ${my_output}";
+       echo "lock holder output: $line";
+       echo "the output file: ${my_output}";
        echo "$line" >> "${my_output}";
+#       exit 0;
       done #& disown;
 
 #     cat ${my_named_pipe} | ql_receiver_lock_holder | tee -a "$HOME/.quicklock/debug.log" > ${my_named_pipe} & disown;
@@ -535,7 +536,7 @@ ql_start_test(){
   . ql.sh;
   ql_remove_all_locks;
 #  pkill -f quicklock
-  pgrep -f quicklock | xargs kill -9
+  pgrep -f ".quicklock" | xargs kill -9
 }
 
 ql_connect(){

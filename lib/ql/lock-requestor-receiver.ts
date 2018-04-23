@@ -4,10 +4,10 @@
 import {createParser, eventName, writeToStream} from './json-parser';
 
 process.stdin.resume()
-// .on('data', function(v){
-//   console.log('raw data received in lock requestor receiver...', String(v));
-//   console.error('raw data received in lock requestor receiver...', String(v));
-// })
+.on('data', function(v){
+  console.log('raw data received in lock requestor receiver...', String(v));
+  console.error('raw data received in lock requestor receiver...', String(v));
+})
 .pipe(createParser()).on(eventName, function (v: any) {
   
   console.log('json received in lock requestor receiver...', JSON.stringify(v));
