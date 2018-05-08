@@ -1,5 +1,12 @@
 {
   "name": "quicklock",
+  "version": "0.0.115",
+  "description": "Quick locks for scripts",
+  "main": "lib/main.js",
+  "scripts": {
+    "test": "suman test",
+    "postinstall": "./postinstall.sh"
+  },
   "bin": {
     "quicklock": "lib/index.js",
     "ql_initial_message": "lib/ql/init-message.js",
@@ -12,13 +19,6 @@
     "ql_receiver_lock_holder": "lib/ql/lock-holder-receiver.js",
     "ql_receiver_lock_requestor": "lib/ql/lock-requestor-receiver.js",
     "ql_write_and_keep_open": "lib/ql/write-and-keep-open.js"
-  },
-  "version": "0.0.115",
-  "description": "Quick locks for scripts",
-  "main": "index.js",
-  "scripts": {
-    "test": "suman test",
-    "postinstall": "./postinstall.sh"
   },
   "repository": {
     "type": "git",
@@ -37,11 +37,11 @@
     "url": "https://github.com/ORESoftware/quicklock/issues"
   },
   "homepage": "https://github.com/ORESoftware/quicklock#readme",
+  "dependencies": {
+    "chalk": "^2.4.0"
+  },
   "devDependencies": {
     "@types/core-js": "^0.9.46",
     "@types/node": "^9.4.6"
-  },
-  "dependencies": {
-    "chalk": "^2.4.0"
   }
 }
