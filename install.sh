@@ -12,28 +12,28 @@ ql_no_color='\033[0m'
 cd "$HOME"
 
 mkdir -p "$HOME/.quicklock/locks"
-mkdir -p "$HOME/.quicklock/nodejs"
-touch "$HOME/.quicklock/server-port.json"
 
 curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware/quicklock/master/ql.sh?$(date +%s)" \
 --output "$HOME/.quicklock/ql.sh"
 
+command -v npm >/dev/null 2>&1 && { 
+  mkdir -p "$HOME/.quicklock/nodejs"
+  touch "$HOME/.quicklock/server-port.json"
 
+  cache_location="$(npm config get cache)"; 
+  if [[ -z "$cache_location" ]]; then
+    cache_location="$HOME/.npm"
+  fi
 
-cache_location="$(npm config get cache)";
+  # clean the cache.... previously: npm cache clean --force;
+  rm -rf "$cache_location/quicklock" || {
+    echo "no quicklock package in npm cache dir.";
+  }
 
-if [[ -z "$cache_location" ]]; then
-  cache_location="$HOME/.npm"
-fi
-
-# clean the cache.... previously: npm cache clean --force;
-rm -rf "$cache_location/quicklock" || {
-  echo "no quicklock package in npm cache dir.";
+  (
+    cd "$HOME/.quicklock/nodejs" && rm -rf package.json && npm init -f && npm install quicklock@latest
+  )
 }
-
-(
-  cd "$HOME/.quicklock/nodejs" && rm -rf package.json && npm init -f && npm install quicklock@latest
-)
 
 echo "";
 echo -e "${ql_green} => quicklock download succeeded.${ql_no_color}";
