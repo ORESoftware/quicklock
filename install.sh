@@ -19,7 +19,6 @@ curl -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/oresoftware
 --output "$HOME/.quicklock/ql.sh"
 
 
-
 cache_location="$(npm config get cache)";
 
 if [[ -z "$cache_location" ]]; then
@@ -32,7 +31,8 @@ rm -rf "$cache_location/quicklock" || {
 }
 
 (
-  cd "$HOME/.quicklock/nodejs" && rm -rf package.json && npm init -f && npm install quicklock@latest
+  # cd "$HOME/.quicklock/nodejs" && rm -rf package.json && npm init -f && npm install quicklock@latest
+  echo "";  # temp placeholder
 )
 
 echo "";
