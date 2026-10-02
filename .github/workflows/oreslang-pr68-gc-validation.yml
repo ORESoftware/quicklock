@@ -1,0 +1,53 @@
+name: oreslang-pr68-gc-validation
+
+on:
+  push:
+    branches: ["ci/oreslang-pr68-gc"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out validation host
+        uses: actions/checkout@v4
+      - name: Check out exact public Oreslang mirror
+        uses: actions/checkout@v4
+        with:
+          repository: ORESoftware/ores-comparisons
+          ref: 9862168df16d57f4ace34953e2c00c39c8de15b9
+          path: validation
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          version: '25.3'
+          java-version: '25'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: maven
+      - name: Verify exact source head
+        working-directory: validation/_ci/oreslang-pr57-full
+        run: grep -Fq "head 9359e049b316447134d2019e2135078af8eed9b6" SOURCE_HEAD.txt
+      - name: GC and actor isolation tests
+        working-directory: validation/_ci/oreslang-pr57-full
+        run: >-
+          mvn -B -ntp
+          -Dtest=GarbageCollectionHardeningTest,ActorRuntimeTest,ActorTransportHardeningTest,PrivateActorIsolationTest,SharedPrivateActorIsolationProofTest,OreslangActorIsolationExampleTest
+          test
+      - name: Run GC language contract
+        working-directory: validation/_ci/oreslang-pr57-full
+        run: |
+          set +e
+          output="$(mvn -B -ntp -DskipTests exec:java -Dexec.args=examples/demo-gc-contract.ores 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          test "$status" -eq 0
+          grep -Fq "gc-contract-ok" <<<"$output"
+      - name: Full Maven suite
+        working-directory: validation/_ci/oreslang-pr57-full
+        run: mvn -B -ntp test
